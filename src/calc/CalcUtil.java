@@ -25,10 +25,18 @@ public class CalcUtil {
     public double pow2(int val) {
         return Math.pow(val, 2);
     }
-    // 小数点以下をN桁取得
+    public double pow2(float val) {
+        return Math.pow(val, 2);
+    }
+    // 小数点以下だけをN桁取得
     public int getDotUnder(float val, int digit) {
-        float dotUnder = (val - (int) val) * digit(digit);
-        return (int) Math.round(dotUnder);
+        float dotUnder = (val - (int) (val) ) * digit(digit);
+        return Math.round(dotUnder);
+    }
+    // 小数を含む値を小数点以下N桁で返す
+    public float getFloatDU(float val, int digit) {
+        int v = (int) val;
+        return v + (float) getDotUnder(val, digit) / digit(digit);
     }
 
     // 文字列操作？ 指定した桁になるように整数に0を埋める

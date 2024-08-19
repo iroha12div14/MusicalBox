@@ -22,6 +22,8 @@ public class SoundEffectManager {
     private final String[] fileNames;
     private final String dirSoundEffect;
 
+    private float masterVolume = 1.0F;
+
     // インスタンス
     // 読み込み先のディレクトリ名と使うファイル名をここで格納
     public SoundEffectManager(String directory, String[] fileNames) {
@@ -56,17 +58,18 @@ public class SoundEffectManager {
     }
 
     // 音声の再生
-    public void startSound(int i) {
-        clips[i].stop();
-        clips[i].flush();
-        clips[i].setFramePosition(10);
-        clips[i].start();
-    }
     public void startSound(String s) {
         int i = findFileName(s);
         if(i != -1) {
             startSound(i);
         }
+    }
+    private void startSound(int i) {
+        clips[i].stop();
+        clips[i].flush();
+        clips[i].setFramePosition(0);
+        setVolume(clips[i]);
+        clips[i].start();
     }
     private int findFileName(String s) {
         for(int f = 0; f < fileNames.length; f++) {
@@ -75,5 +78,18 @@ public class SoundEffectManager {
             }
         }
         return -1;
+    }
+
+    // 音量の調整
+    private void setVolume(Clip clip) {
+        float volume = masterVolume;
+        FloatControl volumeControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+        float maxVolume = volumeControl.getMaximum();
+        volumeControl.setValue(Math.min( (float) Math.log10(volume) * 20, maxVolume) ); // 音量制限
+    }
+
+    // 主音量の調整
+    public void setMasterVolume(float v) {
+        masterVolume = v;
     }
 }

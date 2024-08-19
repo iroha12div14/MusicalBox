@@ -22,7 +22,7 @@ public class PartsNote {
             {new Color(220, 220, 220, 255), new Color(220, 220, 120, 255)},
             {new Color( 30, 120, 250, 255), new Color(180, 120, 220, 255)}
     };
-    private final Color[][] autoPlayColor = {
+    private final Color[][] autoPlayColors = {
             {new Color(220, 220, 220, 25), new Color(220, 220, 120, 25)},
             {new Color( 30, 120, 250, 25), new Color(180, 120, 220, 25)}
     };
@@ -38,7 +38,9 @@ public class PartsNote {
             default -> 300; // このサイズで出たらバグ
         };
     }
-    public Color[] getColors(int keyKind, boolean autoPlay) {
-        return (!autoPlay) ? colors[keyKind] : autoPlayColor[keyKind];
+    public Color getColors(int keyKind, int scoreKind, boolean autoPlay) {
+        return !autoPlay
+                ? colors[keyKind][scoreKind]
+                : autoPlayColors[keyKind][scoreKind];
     }
 }

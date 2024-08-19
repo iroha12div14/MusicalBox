@@ -4,6 +4,8 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /*
@@ -34,10 +36,11 @@ public class SongPreviewManager {
     private final String[] fileNames; // 拡張子を含まないファイル名の一覧
     private final String dirSoundEffect;
 
-    private boolean readyPreview = true;   // 再生準備の有無(多重再生の防止)
+    private boolean readyPreview = false;   // 再生準備の有無(多重再生の防止)
     private String playedPreviewFile = "";  // 再生中のファイル名(stopに用いる情報の保持)
 
-    private static final float previewVolume = 0.5F; // 再生音量
+    private float masterVolume = 1.0F;
+    private static final float previewVolume = 0.5F; // プレビューの再生音量
 
     // インスタンス
     // 読み込み先のディレクトリ名と使うファイル名をここで格納
@@ -86,12 +89,8 @@ public class SongPreviewManager {
         }
     }
     private void startPreview(int i) {
-        if(clips[i] != null) { // 起動時に稀にnullを吐くので一旦弾く
-            setVolume(clips[i]);
-            clips[i].start();
-        } else {
-            System.out.println("startPreview Failed.\t\t\t@songPreviewManager");
-        }
+        setVolume(clips[i]);
+        clips[i].start();
         readyPreview = false;
     }
     // 楽曲プレビューの停止
@@ -104,7 +103,7 @@ public class SongPreviewManager {
     private void stopPreview(int i) {
         clips[i].stop();
         clips[i].flush();
-        clips[i].setFramePosition(10);
+        clips[i].setFramePosition(0);
     }
     // ファイル名探索(start, stopどちらでも使う)
     private int findFileName(String scoreTextName) {
@@ -127,9 +126,16 @@ public class SongPreviewManager {
     }
 
     // 音量の調整
-    public void setVolume(Clip c) {
-        FloatControl control = (FloatControl) c.getControl(FloatControl.Type.MASTER_GAIN);
-        control.setValue((float) Math.log10(previewVolume) * 20);
+    private void setVolume(Clip c) {
+        float volume = masterVolume * previewVolume;
+        FloatControl volumeControl = (FloatControl) c.getControl(FloatControl.Type.MASTER_GAIN);
+        float maxVolume = volumeControl.getMaximum();
+        volumeControl.setValue(Math.min( (float) Math.log10(volume) * 20, maxVolume) ); // 音量制限
+    }
+
+    // 主音量の調整
+    public void setMasterVolume(float v) {
+        masterVolume = v;
     }
 
     // クリップをクローズしてなんとやら

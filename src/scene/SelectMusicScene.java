@@ -69,11 +69,14 @@ public class SelectMusicScene extends SceneBase {
         String[] seFileName = {SE_KNOCK, SE_SWIPE, SE_DECIDE};
         seManager = new SoundEffectManager(directorySE, seFileName);
         seManager.loadWaveFile();
+        seManager.setMasterVolume(cast.getFloatData(this.data, elem.MASTER_VOLUME) ); // 主音量を設定
 
         // プレビューの読み込み
         String directoryPreview = cast.getStrData(this.data, elem.DIRECTORY_PREVIEW);
         prvManager = new SongPreviewManager(directoryPreview, musicFileNames);
         prvManager.loadWaveFile();
+        prvManager.setMasterVolume(cast.getFloatData(this.data, elem.MASTER_VOLUME) ); // 主音量を設定
+        prvManager.readyStartPreview(); // 初期カーソル曲を再生
 
         printMessage("設定の受け渡し完了", 2);
     }

@@ -2,6 +2,7 @@ package wav;
 
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+import java.util.Random;
 
 /*
  * 格納した音声データを再生するクラス
@@ -15,9 +16,13 @@ import javax.sound.sampled.FloatControl;
  */
 public class KeySoundPlayer {
     private final KeySoundContainer container;
-    private static final float manualAudioVolume = 1.0F;
-    private static final float autoAudioVolume = 0.7F;
-    public final float[] clipPlayVolume = {1.2F, 0.9F}; // scoreKind: 0, 1
+    private final Random rand = new Random();
+
+    private float masterVolume = 1.0F;
+    // 音量バランス
+    private final float manualAudioVolume = 1.0F;           // 手動演奏の音量
+    private final float autoAudioVolume = 0.7F;             // 自動再生の音量
+    private final float[] scoreKindVolume = {1.2F, 0.9F};   // scoreKind: 0, 1
 
     // コンストラクタ
     // WaveFilesLoaderでこのインスタンスが作られているので、それ(container)を呼ぶ
@@ -50,15 +55,22 @@ public class KeySoundPlayer {
     // ランダムな音程の取得
     public int randomizePitch(int p) {
         int pitchCount = container.getPitchCount();
-        int r = (int)( Math.random() * 5 ) - 2;
+        int r = rand.nextInt(5) - 2; // -2 ≦ r ≦ 2
         int randomized = Math.min( Math.max(p+r, 0), pitchCount - 1);
         return (randomized != p) ? randomized : randomizePitch(p); // 被ったら再帰で再抽選
     }
 
     // 音量の調整
     public void setVolume(Clip clip, int scoreKind, boolean auto) {
-        float autoMul = !auto ? manualAudioVolume : autoAudioVolume;
+        float mul = !auto ? manualAudioVolume : autoAudioVolume;
+        float volume = masterVolume * mul * scoreKindVolume[scoreKind];
         FloatControl volumeControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-        volumeControl.setValue((float) Math.log10(autoMul * clipPlayVolume[scoreKind]) * 20);
+        float maxVolume = volumeControl.getMaximum();
+        volumeControl.setValue(Math.min( (float) Math.log10(volume) * 20, maxVolume) ); // 音量制限
+    }
+
+    // 主音量の調整
+    public void setMasterVolume(float v) {
+        masterVolume = v;
     }
 }

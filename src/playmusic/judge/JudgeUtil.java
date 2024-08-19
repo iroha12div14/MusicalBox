@@ -7,10 +7,12 @@ import playmusic.drawer.PlayMusicDrawer;
 import wav.KeySoundContainer;
 import wav.KeySoundPlayer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // 判定の処理と定義
 public class JudgeUtil {
+    // インスタンスあれこれ
     private final PartsKeyboard keyboard;
     private final KeySoundPlayer player;
     private final PlayMusicDrawer drawer;
@@ -26,8 +28,8 @@ public class JudgeUtil {
     private int comboMax;
 
     // 判定範囲(ミリ秒)
-    // 判定後ろ寄りで設計 {12, 7, 2, -2, -9, -16}
-    private final int[] judgeArea = new int[]{200, 117, 33, -33, -150, -266};
+    // 判定後ろ寄りで設計 {12, 7, 2, -2, -10, -16}
+    private final int[] judgeArea = new int[]{200, 120, 40, -40, -160, -260};
 
     // 判定状態
     public static final int JUDGE_PERFECT = 0;
@@ -45,15 +47,15 @@ public class JudgeUtil {
     public final int jGreatSlow   = 4;
     public final int jGoodSlow    = 5;
 
-    // ミス判定境界
-    public final int missLimit = judgeArea[jGoodSlow] - 1;
+    // 達成率算出の配点 PERFECT:100pt, GREAT:60pt, GOOD:20pt, OOPS,MISS:0pt
+    private final int[] achievementAllotPoint = {100, 60, 20, 0, 0};
 
-    // 達成率算出の配点 PERFECT:100pt, GREAT:50pt, 他0pt
-    private final int[] achievementAllotPoint = {100, 50, 0, 0, 0};
+    private final List<Integer> timings = new ArrayList<>();
 
     // コンストラクタ
-    public JudgeUtil(KeySoundContainer container, PlayMusicDrawer drawer, PartsKeyboard keyboard) {
+    public JudgeUtil(KeySoundContainer container, PlayMusicDrawer drawer, PartsKeyboard keyboard, float keySoundMasterVolume) {
         player = new KeySoundPlayer(container);
+        player.setMasterVolume(keySoundMasterVolume); // 主音量を設定
         this.drawer = drawer;
         this.keyboard = keyboard;
 
@@ -63,10 +65,6 @@ public class JudgeUtil {
         judgeState = 3; // OOPS判定を仮で入れている
     }
 
-    private final String[] judgeStr = {
-            "PERFECT", "GREAT", "GOOD", "OOPS", "MISS", "AUTO"
-    };
-
     // キーを押した時点の、ノートが判定線に到達するまでの残り時間から、判定を行う
     public void judgeNote(
             List<NoteObject> score, // 楽譜
@@ -74,20 +72,20 @@ public class JudgeUtil {
             int pitch,              // 音程
             int scoreKind,          // 楽譜のパート種別
             boolean autoPlayPart,   // そのパートが自動演奏されているかの有無
-            boolean judgeAuto       // 全パートが自動演奏か(AUTO判定表示の有無)
+            boolean judgeAuto       // 自動再生か(AUTO判定表示の有無)
     ) {
         int judgeState = getJudge(remainTime, autoPlayPart);
         judgeCount[judgeState]++;
 
         // 判定アニメーション
-        // AUTO判定以外の場合か、AUTO判定でも全自動演奏の場合は判定を出す
+        // AUTO判定以外の場合か、AUTO判定でも自動再生の場合は判定を出す
         if( judgeState != JUDGE_AUTO || judgeAuto ) {
             setJudgeState(judgeState);
             drawer.startJudgeAnimTimer();
         }
 
-        // PERFECT, GREAT, AUTO なら正しい音を鳴らす
-        if( judgeState == JUDGE_PERFECT || judgeState == JUDGE_GREAT || judgeState == JUDGE_AUTO ) {
+        // PERFECT, GREAT, GOOD, AUTO なら正しい音を鳴らす
+        if( judgeState == JUDGE_PERFECT || judgeState == JUDGE_GREAT || judgeState == JUDGE_GOOD || judgeState == JUDGE_AUTO ) {
             if( judgeState != JUDGE_AUTO ) {
                 player.startManualAudio(pitch, scoreKind);  // 手動演奏用のClip枠
 
@@ -95,26 +93,26 @@ public class JudgeUtil {
                 keyboard.memoryPushKey(scoreKind, pitch);
                 drawer.startKeyboardAnimTimer(pitch);
 
+                timings.add(remainTime);
             }
             else {
-                player.startAutoAudio(pitch, scoreKind);    // 自動演奏用のClip枠
+                player.startAutoAudio(pitch, scoreKind);    // 自動再生用のClip枠
             }
         }
-        // GOOD, OOPS なら間違った音を鳴らす
-        else if( judgeState == JUDGE_GOOD || judgeState == JUDGE_OOPS ) {
+        // OOPS なら間違った音を鳴らす
+        else if( judgeState == JUDGE_OOPS ) {
             int randomPitch = player.randomizePitch(pitch);  // 音程のランダム化
-            player.startManualAudio(randomPitch, scoreKind);            // 手動演奏用のClip枠
+            player.startManualAudio(randomPitch, scoreKind); // 手動演奏用のClip枠
 
             // キーボードのメモリ[楽譜の種別]にキー押下[音程]を設定し、[楽譜の種別]側キーボードアニメーションを開始
             keyboard.memoryPushKey(scoreKind, randomPitch);
             drawer.startKeyboardAnimTimer(randomPitch);
-
         }
 
         // コンボの処理 PERFECT, GREAT, GOODなら加算、POORなら0にする
         comboCount = switch (judgeState) {
             case JUDGE_PERFECT, JUDGE_GREAT, JUDGE_GOOD
-                    -> ++comboCount;
+                    -> comboCount + 1;
             case JUDGE_MISS
                     -> 0;
             default
@@ -148,7 +146,7 @@ public class JudgeUtil {
                 judgeState = JUDGE_MISS;
             }
         }
-        // 自動演奏時はAUTO扱い
+        // 自動演奏時は無条件でAUTO
         else {
             judgeState = JUDGE_AUTO;
         }
@@ -164,10 +162,12 @@ public class JudgeUtil {
         return judgeState;
     }
 
-    // 判定回数の取得
-    public int getJudgeCount(int j) {
-        return judgeCount[j];
+    // ミス判定境界
+    public int getMissLimit() {
+        return judgeArea[jGoodSlow] - 1;
     }
+
+    // 判定回数の取得(配列)
     public int[] getJudgeCount() {
         return judgeCount;
     }
@@ -181,20 +181,47 @@ public class JudgeUtil {
     }
 
     // 達成率の算出
-    public float getAchievement() {
+    public int getAchievementPoint() {
         int achievementPoint = 0;
-        int judgeSum = 0;
         for(int j = 0; j < judgeCount.length - 1; j++) {
             achievementPoint += achievementAllotPoint[j] * judgeCount[j];
+        }
+        return achievementPoint;
+    }
+    private int getJudgeSum() {
+        int judgeSum = 0;
+        for(int j = 0; j < judgeCount.length - 1; j++) {
             judgeSum += judgeCount[j]; // OOPSを含める
         }
+        return judgeSum;
+    }
+    public float getAchievement() {
+        int achievementPoint = getAchievementPoint();
+        int judgeSum = getJudgeSum();
         return judgeSum != 0 ? (float) achievementPoint / judgeSum : 0.0F;
     }
-    public String getStringAchievement(float achievement, String hd, String tl) {
+    public String getAchievementStr(float achievement, String hd, String tl) {
         int acvInt = (int) achievement;
-        int acvUdt = calc.getDotUnder(acvInt, 2);
+        int acvUdt = calc.getDotUnder(achievement, 2);
         String acvUdt2 = calc.paddingZero(acvUdt, 2);
         return hd + "：" + acvInt + "." + acvUdt2 + tl;
+    }
+
+    // タイミング平均
+    public float getTimingAverage() {
+        int timingSum = timings.stream()
+                .mapToInt(intValue -> intValue)
+                .sum();
+        return calc.div(timingSum, timings.size(), 2);
+    }
+    // タイミング標準偏差[ms]
+    public float getTimingSTDEV() {
+        float timingAverage = getTimingAverage();
+        double varianceMulJ = 0.0F;
+        for(int timing : timings) {
+            varianceMulJ += calc.pow2((float) timing - timingAverage);
+        }
+        return (float) Math.sqrt(varianceMulJ / timings.size() );
     }
 
     // 無音の再生

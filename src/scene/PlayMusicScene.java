@@ -62,12 +62,6 @@ public class PlayMusicScene extends SceneBase {
         // 終了時刻 最後の音が最終時刻 + (スクロール時間) + 3000(オルゴール音源の長さ)
         musicEndTime = playTime + cast.getIntData(this.data, elem.NOTE_MOVE_TIME_OFFSET) + 3000;
 
-        printMessage("[Analyze Sequence]", 3);
-        System.out.printf("\tnotesCount:\t%d[notes]\n", notesCount);
-        System.out.printf("\tplayTime:\t%.3f[sec]\n", (float) playTime / 1000);
-        System.out.printf("\tdensity:\t%.3f[notes/sec]\n", analyze[0]);
-        System.out.printf("\tpeak:\t\t%.3f[notes]\n", analyze[1]);
-
         // 音源コンテナのパラメータを準備
         SequenceGetter sqGetter = new SequenceGetter();
         PunchCard pc = new PunchCard();
@@ -89,10 +83,18 @@ public class PlayMusicScene extends SceneBase {
         PartsKeyboard keyboard = new PartsKeyboard();
         drawer = new PlayMusicDrawer(keyboard, fru, displayWidth, displayHeight);
         // 判定
-        judgeUtil = new JudgeUtil(container, drawer, keyboard);
-        judgeAuto = (playPart == NONE);
+        float keySoundMasterVolume = cast.getFloatData(this.data, elem.MASTER_VOLUME);
+        judgeUtil = new JudgeUtil(
+                container,              // 音源コンテナ
+                drawer,                 // 描画インスタンス
+                keyboard,               // キーボード部品インスタンス
+                keySoundMasterVolume    // 主音量
+        );
+        judgeAuto = (playPart == NONE); // 自動再生の有無
 
         fru.setPause(true); // 最初は一時停止する
+
+        printSequenceAnalyze(notesCount, playTime, analyze);
 
         printMessage("演奏ゲーム開始", 4);
     }
@@ -103,7 +105,7 @@ public class PlayMusicScene extends SceneBase {
         // 経過時間
         int pastTime = fru.getPastTime();
         float achievement = judgeUtil.getAchievement();
-        String acvStrEn = judgeUtil.getStringAchievement(achievement, "Acv", "%");
+        String acvStrEn = judgeUtil.getAchievementStr(achievement, "Acv", "%");
         int judgeSubDsp = cast.getIntData(data, elem.JUDGEMENT_SUB_DISPLAY);
 
         drawer.drawBack(g2d); // 背景
@@ -122,7 +124,7 @@ public class PlayMusicScene extends SceneBase {
         }
         if(pastTime >= musicEndTime && playPart != NONE) {
             // 結果画面
-            String acvStrJp = judgeUtil.getStringAchievement(achievement, "達成率", "％");
+            String acvStrJp = judgeUtil.getAchievementStr(achievement, "達成率", "％");
             drawer.drawResult(g2d, judgeUtil.getJudgeCount(), judgeUtil.getMaxCombo(), acvStrJp);
         }
         if(isMusicEnd) {
@@ -163,7 +165,7 @@ public class PlayMusicScene extends SceneBase {
                             MAIN_SCORE,         // 楽譜のパート種別
                             nowTime,            // 現時刻
                             judgeUtil,          // ノート判定クラス
-                            judgeAuto           // 全パートが自動演奏か(AUTO判定表示の有無)
+                            judgeAuto           // 全パートが自動再生か(AUTO判定表示の有無)
                     );
                     // 伴奏側
                     observer.observeKeyPress(
@@ -198,10 +200,13 @@ public class PlayMusicScene extends SceneBase {
                 }
 
             }
-            // リザルト画面 Enterを押して終了 もしくは自動演奏ならそのまま終了
+            // リザルト画面 Enterを押して終了 もしくは自動再生ならそのまま終了
             else if ((key.getKeyPress(KeyEvent.VK_ENTER) || playPart == NONE) && !isMusicEnd) {
                 isMusicEnd = true;
 
+                if(playPart != NONE) {
+                    printAchievementAndTiming();
+                }
             }
             // フェードアウト直後の処理（dataの持ち越しとシーン遷移）
             else if (isMusicEnd && drawer.isFadeTimeOut()) {
@@ -215,8 +220,8 @@ public class PlayMusicScene extends SceneBase {
             // アニメーションタイマーの経過
             drawer.decAnimTimer(isMusicEnd);
 
-            // スペースを押して楽曲を開始する
-            if (key.getKeyPress(KeyEvent.VK_SPACE) && !isMusicStart) {
+            // スペースを押して楽曲を開始する もしくは自動再生なら操作いらずで開始
+            if ( (key.getKeyPress(KeyEvent.VK_SPACE) || drawer.isFadeInEnd() && playPart == NONE) && !isMusicStart) {
                 isMusicStart = true;
                 fru.setPause(false); // FrameRateUtilのポーズ状態を解除
                 judgeUtil.startNoSound();
@@ -228,6 +233,27 @@ public class PlayMusicScene extends SceneBase {
                 printMessage("    初期化中...", 3);
             }
         }
+    }
+
+    // なんかコンソールに出力するやつ
+    private void printSequenceAnalyze(int notesCount, int playTime, float[] analyze) {
+        printMessage("[Analyze Sequence]", 3);
+        System.out.printf("  Title (Part): %s (%s)\n", musicTitle, drawer.getPlayPartStr(playPart));
+        System.out.printf("  Notes Count:\t%d[notes]\n", notesCount);
+        System.out.printf("  Play Time:\t%.3f[sec]\n", (float) playTime / 1000);
+        System.out.printf("  Density:\t%.3f[notes/sec]\n", analyze[0]);
+        System.out.printf("  Peak:\t\t%.3f[notes]\n", analyze[1]);
+    }
+    private void printAchievementAndTiming() {
+        int acvPoint = judgeUtil.getAchievementPoint() / 20;
+        int sumAcvPoint = cast.getIntData(data, elem.ACHIEVEMENT_POINT);
+        int totalAcvPoint = sumAcvPoint + acvPoint;
+        printMessage("  Acv Point:\t" + acvPoint + "[pt]", 2);
+        printMessage("  Total Acv:\t" + totalAcvPoint + "[pt]", 2);
+        printMessage("  Timing Ave:\t" + judgeUtil.getTimingAverage() + "[ms]", 2);
+        printMessage("  Timing STDEV:\t" + calc.getFloatDU(judgeUtil.getTimingSTDEV(), 2) + "[ms]", 2);
+
+        data.put(elem.ACHIEVEMENT_POINT, totalAcvPoint);
     }
 
     // ------------------------------------------------------ //

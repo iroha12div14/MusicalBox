@@ -52,7 +52,7 @@ class Main {
         data.put(elem.DISPLAY_HEIGHT, 500);
         data.put(elem.DISPLAY_X, 100);
         data.put(elem.DISPLAY_Y, 100);
-        data.put(elem.FRAME_RATE, 60);
+        data.put(elem.FRAME_RATE, 60); // フレームレート
 
         // 使用ディレクトリ
         data.put(elem.DIRECTORY_PUNCH_CARD, "_punchCard");
@@ -62,19 +62,24 @@ class Main {
 
         data.put(elem.SCENE_ID, 1);
 
+        data.put(elem.MASTER_VOLUME, 1.0F); //主音量
+
         data.put(elem.SELECT_MUSIC_CURSOR, 0);
 
         data.put(elem.NOTE_MOVE_TIME_OFFSET, 4000);
         data.put(elem.NOTE_UNIT_MOVE, 0.10F);
 
-        data.put(elem.JUDGEMENT_SUB_DISPLAY, 1);
+        data.put(elem.JUDGEMENT_SUB_DISPLAY, 2); // 判定のサブ表示
 
+        // 演奏ゲームで使用するキー
         data.put(elem.KEY_CONFIG_PLAY_RIGHT, new int[]{
                 KeyEvent.VK_J, KeyEvent.VK_K, KeyEvent.VK_L
         });
         data.put(elem.KEY_CONFIG_PLAY_LEFT,  new int[]{
                 KeyEvent.VK_F, KeyEvent.VK_D, KeyEvent.VK_S
         });
+
+        data.put(elem.ACHIEVEMENT_POINT, 0); // なんかやり込みポイント的なやつ
 
         // コマンドライン引数の有無で最初に表示する場面を変える
         if(len == 1 || len == 2) {

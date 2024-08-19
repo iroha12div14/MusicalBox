@@ -24,7 +24,7 @@ public class KeyPressObserver {
             int scoreKind,          // 楽譜のパート種別
             int nowTime,            // 現時刻
             JudgeUtil judgeUtil,    // ノート判定クラス
-            boolean judgeAuto       // 全パートが自動演奏か(AUTO判定表示の有無)
+            boolean judgeAuto       // 自動再生か(AUTO判定表示の有無)
     ) {
         // そのパートが自動演奏されているかの有無
         boolean autoPlayPart
@@ -55,7 +55,7 @@ public class KeyPressObserver {
             // 条件2a: 自動演奏されるパートで判定線と重なる、もしくは
             // 条件2b: 演奏するパートで一定時間を過ぎた
             boolean terms2a = autoPlayPart && remainTime <= 0;
-            boolean terms2b = !autoPlayPart && remainTime <= judgeUtil.missLimit;
+            boolean terms2b = !autoPlayPart && remainTime <= judgeUtil.getMissLimit();
 
             // 条件1 もしくは 条件2かつ(条件2aまたは条件2b) を満たすとき、ノートに対する判定が発生する
             if ( terms1 || terms2 && ( terms2a || terms2b ) ) {
@@ -65,7 +65,7 @@ public class KeyPressObserver {
                         pitch,          // 音程
                         scoreKind,      // 楽譜のパート種別
                         autoPlayPart,   // そのパートが自動演奏されているかの有無
-                        judgeAuto       // 全パートが自動演奏か(AUTO判定表示の有無)
+                        judgeAuto       // 自動再生か(AUTO判定表示の有無)
                 );
             }
         }

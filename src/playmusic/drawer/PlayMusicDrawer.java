@@ -72,10 +72,10 @@ public class PlayMusicDrawer {
     private final Color colorResultFullComboShadow = new Color(0, 10, 20, 255);
     private final Color colorResultCombo           = new Color(255, 255, 255, 255);
 
-    private final Color colorNoteMainWhite = note.getColors(0, false)[MAIN_SCORE];
-    private final Color colorNoteMainBlack = note.getColors(1, false)[MAIN_SCORE];
-    private final Color colorNoteSubWhite  = note.getColors(0, false)[SUB_SCORE];
-    private final Color colorNoteSubBlack  = note.getColors(1, false)[SUB_SCORE];
+    private final Color colorNoteMainWhite = note.getColors(0, MAIN_SCORE, false);
+    private final Color colorNoteMainBlack = note.getColors(1, MAIN_SCORE, false);
+    private final Color colorNoteSubWhite  = note.getColors(0, SUB_SCORE,  false);
+    private final Color colorNoteSubBlack  = note.getColors(1, SUB_SCORE,  false);
     private final Color colorJudgeLine     = judgeLine.getColor();
     private final Color colorAutoPlay      = backGray;
 
@@ -101,7 +101,9 @@ public class PlayMusicDrawer {
     private final Font fontFPS = font.Arial(10);
 
     // 表示テキスト
-    private final String[] playPartStr = {"自動再生", "メロディ", "伴奏", "全演奏"};
+    private final String[] playPartStr = {"自動再生", "メロディ", "伴奏", "メロディ＆伴奏"};
+
+    // ------------------------------------------------------------------------ //
 
     // コンストラクタ
     public PlayMusicDrawer(PartsKeyboard keyboard, FrameRateUtil fru, int displayWidth, int displayHeight) {
@@ -148,7 +150,7 @@ public class PlayMusicDrawer {
             int scoreKind,          // 楽譜のパート種別
             int pastTime,           // 経過時間
             float noteUnitMov,      // 1ミリ秒あたりの移動量
-            int playPart            // 演奏パート
+            int playPart           // 演奏パート
     ) {
         for(NoteObject noteObject : score) { // 名前被り防止でnoteと書いてない
             // 到達時刻、音程、ノートの種類、アルペジオノートであれば結線の接続先
@@ -170,7 +172,7 @@ public class PlayMusicDrawer {
             boolean autoPlay = (playPart == NONE_PART
                     || (playPart == MAIN_PART && scoreKind == SUB_SCORE)
                     || (playPart == SUB_PART  && scoreKind == MAIN_SCORE));
-            Color color = note.getColors(keyKind, autoPlay)[scoreKind];
+            Color color = note.getColors(keyKind, scoreKind, autoPlay);
 
             // ノーツの描画
             Map<Draw.Param, Integer> noteParam;
@@ -599,4 +601,14 @@ public class PlayMusicDrawer {
     public void startScrollSpeedAnimTimer() {
         scrollSpeedAnimTimer = 20;
     }
+
+    public boolean isFadeInEnd() {
+        return fadeInAnimTimer == 0;
+    }
+
+    // ------------------------------------------------------------------------ //
+    public String getPlayPartStr (int playPart) {
+        return playPartStr[playPart];
+    }
+
 }

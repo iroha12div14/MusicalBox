@@ -39,7 +39,7 @@ public class SelectMusicDrawer {
     private static final int MAIN_PART = 1;
     private static final int SUB_PART  = 2;
     private static final int ALL_PART  = 3;
-    private final String[] partStrs = new String[]{"自動再生", "メロディ", "伴奏", "全演奏"};
+    private final String[] partStrs = new String[]{"自動再生", "メロディ", "伴奏", "メロディ＆伴奏"};
     private final int[] difficultyMaxes = new int[]{0, 5, 5, 10};
 
     // アニメーションタイマー
