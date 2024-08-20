@@ -37,12 +37,16 @@ public class PlayMusicDrawer {
     private final int DISPLAY_HEIGHT;
 
     // タイマー
+    private final int frameRate;
+    private static final int JUDGE_ANIM_TIMER_SET = 25;
+    private static final int KEYBOARD_ANIM_TIMER_SET = 10;
     private static final int FADE_IN_ANIM_TIMER_SET = 30;
     private static final int FADE_OUT_ANIM_TIMER_SET = 60;
+    private static final int SCROLL_SPEED_ANIM_TIMER_SET = 20;
     private int judgeAnimTimer = 0;
     private final int[] keyboardAnimTimer = new int[32];
-    private int fadeInAnimTimer = FADE_IN_ANIM_TIMER_SET;
-    private int fadeOutAnimTimer = FADE_OUT_ANIM_TIMER_SET;
+    private int fadeInAnimTimer;
+    private int fadeOutAnimTimer;
     private int scrollSpeedAnimTimer = 0;
 
     // 楽譜のパート種別と演奏パート
@@ -106,12 +110,23 @@ public class PlayMusicDrawer {
     // ------------------------------------------------------------------------ //
 
     // コンストラクタ
-    public PlayMusicDrawer(PartsKeyboard keyboard, FrameRateUtil fru, int displayWidth, int displayHeight) {
+    public PlayMusicDrawer(
+            PartsKeyboard keyboard,
+            FrameRateUtil fru,
+            int displayWidth,
+            int displayHeight,
+            int frameRate
+    ) {
         this.keyboard = keyboard;
         this.fru = fru;
 
         DISPLAY_WIDTH  = displayWidth;
         DISPLAY_HEIGHT = displayHeight;
+
+        this.frameRate = frameRate;
+
+        fadeInAnimTimer = FADE_IN_ANIM_TIMER_SET * frameRate / 60;
+        fadeOutAnimTimer = FADE_OUT_ANIM_TIMER_SET * frameRate / 60;
 
         Arrays.fill(keyboardAnimTimer, 0); // 全部0で埋める書き方らしい
     }
@@ -276,13 +291,16 @@ public class PlayMusicDrawer {
 
             int timer = getJudgeAnimTimer();
             int judgeX = pos.getJudgeX(j);
-            int judgeY = pos.getJudgeY(timer);
+            int judgeY = pos.getJudgeY(timer * 60 / frameRate);
 
             // 判定
+            int loop = 9 * frameRate / 60;
+            int t1   = 3 * frameRate / 60;
+            int t2   = 6 * frameRate / 60;
             g2d.setFont(judgeFont);
-            if(timer % 9 < 3) {
+            if(timer % loop < t1) {
                 g2d.setColor( color[0] );
-            } else if(timer % 9 < 6) {
+            } else if(timer % loop < t2) {
                 g2d.setColor( color[1] );
             } else {
                 g2d.setColor( color[2] );
@@ -537,7 +555,7 @@ public class PlayMusicDrawer {
     // フェードインモーション
     public void drawFadeIn(Graphics2D g2d) {
         for(int s = 0; s < 8; s++) {
-            int w = DISPLAY_WIDTH * fadeInAnimTimer / FADE_IN_ANIM_TIMER_SET;
+            int w = DISPLAY_WIDTH * fadeInAnimTimer * 60 / (FADE_IN_ANIM_TIMER_SET * frameRate);
             drawRect.fill(g2d, Color.BLACK,
                     drawRect.makeParam(0, DISPLAY_HEIGHT * s / 8, w, DISPLAY_HEIGHT / 16)
             );
@@ -553,8 +571,9 @@ public class PlayMusicDrawer {
         int w = DISPLAY_WIDTH / 2;
         int h = DISPLAY_HEIGHT / 2;
         int r = (w + h) * 2;
+        int a = (int) (400 * (1.0F - (float) fadeOutAnimTimer * 60 / (FADE_OUT_ANIM_TIMER_SET * frameRate)));
         drawArc.fill(g2d, Color.BLACK,
-                drawArc.makeParamArc(w, h, r, r, 90, 90 + (int) (400 * (1.0F - (float) fadeOutAnimTimer / FADE_OUT_ANIM_TIMER_SET)) ),
+                drawArc.makeParamArc(w, h, r, r, 90, 90 + a ),
                 drawArc.makeSide(drawArc.CENTER, drawArc.CENTER)
         );
     }
@@ -584,24 +603,25 @@ public class PlayMusicDrawer {
 
     // アニメーションタイマーの設定と取得
     public void startJudgeAnimTimer() {
-        judgeAnimTimer = 25;
+        judgeAnimTimer = JUDGE_ANIM_TIMER_SET * frameRate / 60;
     }
     public void startKeyboardAnimTimer(int pitch) {
-         keyboardAnimTimer[pitch] = 10;
+         keyboardAnimTimer[pitch] = KEYBOARD_ANIM_TIMER_SET * frameRate / 60;
     }
+    public void startScrollSpeedAnimTimer() {
+        scrollSpeedAnimTimer = SCROLL_SPEED_ANIM_TIMER_SET * frameRate / 60;
+    }
+
     private int getJudgeAnimTimer() {
         return judgeAnimTimer;
     }
     public int getKeyboardAnimTimer(int pitch) {
         return keyboardAnimTimer[pitch];
     }
+
     public boolean isFadeTimeOut() {
         return fadeOutAnimTimer == 0;
     }
-    public void startScrollSpeedAnimTimer() {
-        scrollSpeedAnimTimer = 20;
-    }
-
     public boolean isFadeInEnd() {
         return fadeInAnimTimer == 0;
     }

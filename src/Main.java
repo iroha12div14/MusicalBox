@@ -47,7 +47,7 @@ class Main {
         data.put(elem.SCENE_MANAGER, sceneManager);
 
         // ウインドウの設定
-        data.put(elem.WINDOW_NAME, "オルゴールプレーヤ");
+        data.put(elem.WINDOW_NAME, "オルゴールプレーヤ v0.0.2");
         data.put(elem.DISPLAY_WIDTH, 400);
         data.put(elem.DISPLAY_HEIGHT, 500);
         data.put(elem.DISPLAY_X, 100);
@@ -69,7 +69,7 @@ class Main {
         data.put(elem.NOTE_MOVE_TIME_OFFSET, 4000);
         data.put(elem.NOTE_UNIT_MOVE, 0.10F);
 
-        data.put(elem.JUDGEMENT_SUB_DISPLAY, 2); // 判定のサブ表示
+        data.put(elem.JUDGEMENT_SUB_DISPLAY, 1); // 判定のサブ表示
 
         // 演奏ゲームで使用するキー
         data.put(elem.KEY_CONFIG_PLAY_RIGHT, new int[]{

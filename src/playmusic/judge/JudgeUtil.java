@@ -53,7 +53,12 @@ public class JudgeUtil {
     private final List<Integer> timings = new ArrayList<>();
 
     // コンストラクタ
-    public JudgeUtil(KeySoundContainer container, PlayMusicDrawer drawer, PartsKeyboard keyboard, float keySoundMasterVolume) {
+    public JudgeUtil(
+            KeySoundContainer container,
+            PlayMusicDrawer drawer,
+            PartsKeyboard keyboard,
+            float keySoundMasterVolume
+    ) {
         player = new KeySoundPlayer(container);
         player.setMasterVolume(keySoundMasterVolume); // 主音量を設定
         this.drawer = drawer;

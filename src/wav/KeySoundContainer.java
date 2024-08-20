@@ -45,7 +45,7 @@ public class KeySoundContainer {
             "_7Cn", "_7Cs", "_7Dn", "_7Ef", "_7En"
     };
     // 手動演奏用のカウンタの上限
-    private final int manualPlayCounterCycle = 6;
+    private final int manualPlayCounterCycle = 12;
 
     // 音源の格納先
     private final Clip[][] clips;

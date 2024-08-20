@@ -37,6 +37,8 @@ public class PlayMusicScene extends SceneBase {
         keyAssignMainPart = cast.getIntArrData(this.data, elem.KEY_CONFIG_PLAY_RIGHT);
         keyAssignSubPart  = cast.getIntArrData(this.data, elem.KEY_CONFIG_PLAY_LEFT);
 
+        frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
+
         // TODO: 読み込みに時間が掛かるので別スレッドで進行させ、その間に読み込みの進度を表示しておく。
 
         printMessage("パンチカード読み込みと時系列化", 2);
@@ -81,14 +83,14 @@ public class PlayMusicScene extends SceneBase {
 
         // 描画インスタンス
         PartsKeyboard keyboard = new PartsKeyboard();
-        drawer = new PlayMusicDrawer(keyboard, fru, displayWidth, displayHeight);
+        drawer = new PlayMusicDrawer(keyboard, fru, displayWidth, displayHeight, frameRate);
         // 判定
         float keySoundMasterVolume = cast.getFloatData(this.data, elem.MASTER_VOLUME);
         judgeUtil = new JudgeUtil(
                 container,              // 音源コンテナ
                 drawer,                 // 描画インスタンス
                 keyboard,               // キーボード部品インスタンス
-                keySoundMasterVolume    // 主音量
+                keySoundMasterVolume   // 主音量
         );
         judgeAuto = (playPart == NONE); // 自動再生の有無
 
@@ -107,6 +109,7 @@ public class PlayMusicScene extends SceneBase {
         float achievement = judgeUtil.getAchievement();
         String acvStrEn = judgeUtil.getAchievementStr(achievement, "Acv", "%");
         int judgeSubDsp = cast.getIntData(data, elem.JUDGEMENT_SUB_DISPLAY);
+        int frameRate = cast.getIntData(data, elem.FRAME_RATE);
 
         drawer.drawBack(g2d); // 背景
         drawer.drawJudgeLine(g2d); // 判定線
@@ -287,6 +290,7 @@ public class PlayMusicScene extends SceneBase {
     private final int musicTempo;
 
     // 時刻と時間にまつわるもの
+    private int frameRate;                  // 指定フレームレート
     private int nowTime;                    // 現時刻
     private final int noteMovTimeOffset;    // ノートの移動時間
     private float noteUnitMov;              // 1ミリ秒当たりの移動量

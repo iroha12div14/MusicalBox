@@ -4,11 +4,12 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Map;
 
 public class SceneTemplate extends SceneBase {
 
     //コンストラクタ
-    public SceneTemplate() {
+    public SceneTemplate(Map<Integer, Object> data) {
         // 画面サイズ、FPS、キーアサインの初期化
         init(keyAssign, data);
     }

@@ -28,8 +28,20 @@ public class FontUtil {
         return new Font("Meiryo", PLAIN, size);
     }
 
+    // 描画支援メソッド
+    public void setStr(Graphics2D g2d, Font font, Color color) {
+        g2d.setColor(color);
+        g2d.setFont(font);
+    }
+    public void drawStr(Graphics2D g2d, String str, int x, int y) {
+        g2d.drawString(str, x, y);
+    }
+
     // コンボ表示の文字幅の算出
     public int strWidth(Graphics2D g2d, Font font, String str) {
         return g2d.getFontMetrics(font).stringWidth(str);
+    }
+    public int strHeight(Graphics2D g2d, Font font) {
+        return g2d.getFontMetrics(font).getHeight();
     }
 }

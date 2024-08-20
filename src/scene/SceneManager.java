@@ -84,6 +84,7 @@ public class SceneManager {
         return switch (scene) {
             case SELECT_MUSIC_SCENE -> new SelectMusicScene(data);
             case PLAY_MUSIC_SCENE   -> new PlayMusicScene(data);
+            case OPTION_SCENE       -> new OptionScene(data);
         };
     }
 

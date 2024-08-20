@@ -25,6 +25,8 @@ public class SelectMusicScene extends SceneBase {
         playPart = cast.getIntData(this.data, elem.PLAY_PART);
         cursor   = cast.getIntData(this.data, elem.SELECT_MUSIC_CURSOR);
 
+        frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
+
         // パンチカードのデータを読み込み、ヘッダ部分をデータ化
         String directoryPunchCard = cast.getStrData(this.data, elem.DIRECTORY_PUNCH_CARD);
         TextFilesManager txtManager = new TextFilesManager(directoryPunchCard);
@@ -112,39 +114,45 @@ public class SelectMusicScene extends SceneBase {
         if(drawer != null && prvManager != null) {
             // シーン転換中はキー操作を受け付けない
             if (!sceneTransition) {
+                // キー入力構文の表記省略
+                boolean pressUpKey    = key.getKeyPress(KeyEvent.VK_UP);
+                boolean pressDownKey  = key.getKeyPress(KeyEvent.VK_DOWN);
+                boolean pressSpaceKey = key.getKeyPress(KeyEvent.VK_SPACE);
+                boolean pressShiftKey = key.getKeyPress(KeyEvent.VK_SHIFT);
+                boolean pressEnterKey = key.getKeyPress(KeyEvent.VK_ENTER);
+                boolean holdUpKey     = key.getKeyHold(KeyEvent.VK_UP);
+                boolean holdDownKey   = key.getKeyHold(KeyEvent.VK_DOWN);
+                boolean releaseAllKey = !key.isAnyKeyPress();
+
                 // キー操作に対する動作
                 // 曲名バーの移動中(正確には着地3F前)にはキー入力を受け付けない
                 if (drawer.getTitlebarAnimTimer() < 3) {
-                    if (key.getKeyPress(KeyEvent.VK_UP)) {
-                        moveCursor(DIR_UP);
-                    } else if (key.getKeyPress(KeyEvent.VK_DOWN)) {
-                        moveCursor(DIR_DOWN);
-                    } else if (key.getKeyPress(KeyEvent.VK_SPACE)) {
-                        changePart();
-                    } else if (key.getKeyPress(KeyEvent.VK_ENTER)) {
-                        selectMusic();
+                    if (pressUpKey) {
+                        moveCursor(DIR_UP);         // ↑キーで選択楽曲の変更
+                    } else if (pressDownKey) {
+                        moveCursor(DIR_DOWN);       // ↓キーで選択楽曲の変更
+                    } else if (pressSpaceKey) {
+                        changePart();               // Spaceキーでパートの変更
+                    } else if (pressShiftKey) {
+                        optionSceneTransition();    // Shiftキーでオプション画面に遷移
+                    } else if (pressEnterKey) {
+                        selectMusic();              // Enterキーで楽曲を決定する
                     }
                 }
                 // キー継続押下による連射入力
-                UPKeyHoldRapidInputTimer = key.getKeyHold(KeyEvent.VK_UP)
-                        ? UPKeyHoldRapidInputTimer + 1
-                        : 0;
-                DOWNKeyHoldRapidInputTimer = key.getKeyHold(KeyEvent.VK_DOWN)
-                        ? DOWNKeyHoldRapidInputTimer + 1
-                        : 0;
-                if (UPKeyHoldRapidInputTimer >= RAPID_INPUT_TIMER_LOWER_LIMIT
-                        && UPKeyHoldRapidInputTimer % RAPID_INPUT_TIMER_LOOP == 0) {
+                UpKeyHoldRapidInputTimer = holdUpKey   ? UpKeyHoldRapidInputTimer + 1 : 0;
+                DownKeyHoldRapidInputTimer = holdDownKey ? DownKeyHoldRapidInputTimer + 1 : 0;
+                if (UpKeyHoldRapidInputTimer >= RAPID_INPUT_TIMER_LOWER_LIMIT * frameRate / 60
+                        && UpKeyHoldRapidInputTimer % (RAPID_INPUT_TIMER_LOOP * frameRate / 60) == 0) {
                     moveCursor(DIR_UP);
                 }
-                if (DOWNKeyHoldRapidInputTimer >= RAPID_INPUT_TIMER_LOWER_LIMIT
-                        && DOWNKeyHoldRapidInputTimer % RAPID_INPUT_TIMER_LOOP == 0) {
+                if (DownKeyHoldRapidInputTimer >= RAPID_INPUT_TIMER_LOWER_LIMIT * frameRate / 60
+                        && DownKeyHoldRapidInputTimer % (RAPID_INPUT_TIMER_LOOP * frameRate / 60) == 0) {
                     moveCursor(DIR_DOWN);
                 }
 
-                // アニメーションタイマー
-                keyReleaseTimer = !key.isAnyKeyPress()
-                        ? keyReleaseTimer + 1
-                        : 0;
+                // 何もキーを押していない間にそれ用のタイマーが加算
+                keyReleaseTimer = releaseAllKey ? keyReleaseTimer + 1 : 0;
 
                 // プレビュー再生
                 if(drawer.getTitlebarAnimTimer() == 0 && prvManager.isReadyPreview() ) {
@@ -157,24 +165,23 @@ public class SelectMusicScene extends SceneBase {
                 if( !drawer.isOverSceneTransitionAnimTimer() ) {
                     prvManager.stopPreview(); // プレビューを停止
                 }
-                // シーン転換の終わり
+                // シーン転換の終わりに演奏ゲーム画面に遷移
                 else {
-                    printMessage("演奏ゲームに移動します", 2);
-                    prvManager.closeClips();
-                    sceneTransition(Scene.PLAY_MUSIC_SCENE);
+                    musicGameSceneTransition();
                 }
             }
 
             // アニメーションタイマーの経過
             drawer.decAnimTimer(
                     sceneTransition,
-                    keyReleaseTimer >= KEY_RELEASE_TIMER_SET
+                    keyReleaseTimer >= KEY_RELEASE_TIMER_SET * frameRate  / 60
             );
 
         }
         // drawerとprvManagerが初期化されるまではここを通る
         else {
-            if(fru.getPastFrame() % 60 == 0) {
+            int f = frameRate == 0 ? 60 : frameRate;
+            if(fru.getPastFrame() % f == 0) {
                 printMessage("    初期化中...", 2);
             }
         }
@@ -187,10 +194,9 @@ public class SelectMusicScene extends SceneBase {
         cursor += dir;
         titlebarMovDir = dir;
         drawer.startTitlebarAnimTimer();
-        seManager.startSound(SE_SWIPE);
-
-        prvManager.readyStartPreview();
         prvManager.stopPreview();
+        seManager.startSound(SE_SWIPE);
+        prvManager.readyStartPreview();
     }
 
     // パートの変更
@@ -204,6 +210,22 @@ public class SelectMusicScene extends SceneBase {
         inputData();
         sceneTransition = true;
         seManager.startSound(SE_DECIDE);
+    }
+
+    // オプション画面・演奏ゲーム画面へのシーン転換
+    private void optionSceneTransition() {
+        prvManager.stopPreview(); // プレビューを停止
+        data.put(elem.SELECT_MUSIC_CURSOR, cursor);
+        data.put(elem.PLAY_PART, playPart);
+        sceneTrans("オプション", Scene.OPTION_SCENE);
+    }
+    private void musicGameSceneTransition() {
+        sceneTrans("演奏ゲーム", Scene.PLAY_MUSIC_SCENE);
+    }
+    private void sceneTrans(String sceneName, Scene scene) {
+        printMessage(sceneName + "画面に移動します", 2);
+        prvManager.closeClips();
+        sceneTransition(scene);
     }
 
     // ------------------------------------------------------ //
@@ -249,8 +271,10 @@ public class SelectMusicScene extends SceneBase {
     private final int[] mainDifficulties;
     private final int[] subDifficulties;
 
+    private final int frameRate;
+
     // シーン転換(曲決定するまで停止)
-    boolean sceneTransition = false;
+    private boolean sceneTransition = false;
 
     // カーソル移動もろもろ
     private static final int DIR_UP = -1;
@@ -270,8 +294,8 @@ public class SelectMusicScene extends SceneBase {
     private static final int RAPID_INPUT_TIMER_LOWER_LIMIT = 18; // 継続入力時間[F]
     private static final int RAPID_INPUT_TIMER_LOOP = 6; // 連射入力間隔[F]
     private int keyReleaseTimer = 0;
-    private int UPKeyHoldRapidInputTimer = 0;
-    private int DOWNKeyHoldRapidInputTimer = 0;
+    private int UpKeyHoldRapidInputTimer = 0;
+    private int DownKeyHoldRapidInputTimer = 0;
 
     // 効果音(予約語)
     private final String SE_KNOCK  = "knock_book01.wav";

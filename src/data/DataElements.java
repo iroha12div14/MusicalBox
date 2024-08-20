@@ -18,9 +18,9 @@ public class DataElements {
     public final int DIRECTORY_SE         = 23; // String
     public final int DIRECTORY_PREVIEW    = 24; // String
 
-    public final int MASTER_VOLUME = 31;
+    public final int MASTER_VOLUME = 31; // float
 
-    public final int ACHIEVEMENT_POINT = 41;
+    public final int ACHIEVEMENT_POINT = 41; // int
 
     public final int MUSIC_TITLE           = 101; // String
     public final int PLAY_PART             = 102; // int

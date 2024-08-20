@@ -26,6 +26,8 @@ public class SelectMusicDrawer {
     private final FrameRateUtil fru;
     private final KeyController key;
 
+    private final int frameRate;
+
     // 画面サイズ
     private final int DISPLAY_WIDTH;
     private final int DISPLAY_HEIGHT;
@@ -50,7 +52,7 @@ public class SelectMusicDrawer {
     private static final int SCENE_TRANSITION_ANIM_TIMER_SET = 160;
     private int titlebarAnimTimer = 0; // ANIM_TIMER_SET → 0
     private int directorAnimTimer = 0; // ANIM_TIMER_SET → 0, loop
-    private int fadeInAnimTimer = 30;
+    private int fadeInAnimTimer;
     private int sceneTransitionAnimTimer = 0;
     private final int stripeAtPower = (int) calc.pow2(STRIPE_ANIM_TIMER_SET);
 
@@ -127,10 +129,12 @@ public class SelectMusicDrawer {
         this.key = key;
 
         // dataの受け渡し
-        DataCaster caster = new DataCaster();
+        DataCaster cast = new DataCaster();
         DataElements elem = new DataElements();
-        DISPLAY_WIDTH  = caster.getIntData(data, elem.DISPLAY_WIDTH);
-        DISPLAY_HEIGHT = caster.getIntData(data, elem.DISPLAY_HEIGHT);
+        DISPLAY_WIDTH  = cast.getIntData(data, elem.DISPLAY_WIDTH);
+        DISPLAY_HEIGHT = cast.getIntData(data, elem.DISPLAY_HEIGHT);
+
+        frameRate = cast.getIntData(data, elem.FRAME_RATE);
 
         // 楽曲選択で用いる内容の受け渡し
         this.musicTitles = musicTitles;
@@ -141,6 +145,8 @@ public class SelectMusicDrawer {
 
         // シーン転換時のアニメーション(ランダムで2種)
         stripePattern = new Random().nextInt(2);
+
+        fadeInAnimTimer = FADE_IN_ANIM_TIMER_SET * frameRate / 60;
     }
 
     // ---------------------------------------------------------------------- //
@@ -165,7 +171,7 @@ public class SelectMusicDrawer {
                 circle.makeParam(POINTER_CENTER_X, POINTER_CENTER_Y, POINTER_RADIUS, POINTER_RADIUS),
                 circle.makeSide(circle.CENTER, circle.CENTER)
         );
-        int turn = titlebarMovDir * 360 * titlebarAnimTimer / TITLEBAR_ANIM_TIMER_SET;
+        int turn = titlebarMovDir * 360 * titlebarAnimTimer * 60 / (TITLEBAR_ANIM_TIMER_SET * frameRate);
         arc.fill(g2d, Color.BLACK,
                 arc.makeParamArc(
                         POINTER_CENTER_X, POINTER_CENTER_Y, POINTER_RADIUS-2, POINTER_RADIUS-2,
@@ -197,7 +203,7 @@ public class SelectMusicDrawer {
 
         int musicCount = musicTitles.length;
         int barCenterPoint = TITLEBAR_COUNT / 2;
-        float barProgress = (float) titlebarAnimTimer / TITLEBAR_ANIM_TIMER_SET;
+        float barProgress = (float) titlebarAnimTimer * 60 / (TITLEBAR_ANIM_TIMER_SET * frameRate);
 
         Color barColor = partColor[playPart];
         Map<Draw.Side, Integer> barSide = rect.makeSide(rect.LEFT, rect.CENTER);
@@ -273,7 +279,7 @@ public class SelectMusicDrawer {
     }
     // ディレクタを描く
     public void drawDirector(Graphics2D g2d) {
-        float dtrProgress = (float) directorAnimTimer / DIRECTOR_ANIM_TIMER_SET;
+        float dtrProgress = (float) directorAnimTimer / ((float) (DIRECTOR_ANIM_TIMER_SET * frameRate) / 60);
         int x = TITLEBAR_HEIGHT + (DISPLAY_WIDTH - TITLEBAR_HEIGHT) / 2;
         int yt = DIRECTOR_CENTER_Y - DIRECTOR_PADDING_Y + (int) (DIRECTOR_MOVE_Y * dtrProgress);
         int yb = DIRECTOR_CENTER_Y + DIRECTOR_PADDING_Y - (int) (DIRECTOR_MOVE_Y * dtrProgress);
@@ -292,7 +298,7 @@ public class SelectMusicDrawer {
     // フェードインの描写
     public void drawFadeIn(Graphics2D g2d) {
         int x = DISPLAY_WIDTH;
-        int w = x * fadeInAnimTimer / FADE_IN_ANIM_TIMER_SET;
+        int w = x * fadeInAnimTimer / (FADE_IN_ANIM_TIMER_SET * frameRate / 60);
         rect.fill(g2d, Color.BLACK,
                 rect.makeParam(x, 0, w, DISPLAY_HEIGHT),
                 rect.makeSide(rect.RIGHT, rect.TOP)
@@ -301,7 +307,7 @@ public class SelectMusicDrawer {
     // シーン転換を描く
     public void drawSceneTransition(Graphics2D g2d) {
         int stripe = STRIPE_ANIM_TIMER_SET;
-        int timer = sceneTransitionAnimTimer;
+        int timer = sceneTransitionAnimTimer * 60 / frameRate;
 
         if(timer > 0 && timer < stripeAtPower) {
             int tDiv = timer / stripe;
@@ -416,7 +422,8 @@ public class SelectMusicDrawer {
 
         // 一定時間操作をしていない場合の動作
         if ( keyRelease ) {
-            directorAnimTimer = calc.mod(directorAnimTimer - 1, DIRECTOR_ANIM_TIMER_SET);
+            int mod = DIRECTOR_ANIM_TIMER_SET * frameRate / 60;
+            directorAnimTimer = calc.mod(directorAnimTimer - 1, mod);
         }
 
         // シーン転換
@@ -426,16 +433,18 @@ public class SelectMusicDrawer {
     }
 
     public void startTitlebarAnimTimer() {
-        titlebarAnimTimer = TITLEBAR_ANIM_TIMER_SET;
+        titlebarAnimTimer = TITLEBAR_ANIM_TIMER_SET * frameRate / 60;
     }
+
     public int getTitlebarAnimTimer() {
         return titlebarAnimTimer;
     }
+
     public boolean isOverSceneTransitionAnimTimer() {
-        return sceneTransitionAnimTimer >= SCENE_TRANSITION_ANIM_TIMER_SET;
+        return sceneTransitionAnimTimer >= SCENE_TRANSITION_ANIM_TIMER_SET * frameRate / 60;
     }
     public boolean isOverStripeAtPow() {
-        return sceneTransitionAnimTimer >= stripeAtPower;
+        return sceneTransitionAnimTimer >= stripeAtPower * frameRate / 60;
     }
 
 }
