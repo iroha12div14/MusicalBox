@@ -2,6 +2,9 @@ package scene;
 
 import data.DataCaster;
 import data.DataElements;
+import scenes.option.OptionScene;
+import scenes.playmusic.PlayMusicScene;
+import scenes.selectmusic.SelectMusicScene;
 
 import javax.swing.*;
 import java.awt.*;
@@ -82,9 +85,9 @@ public class SceneManager {
     private SceneBase makeScene(Scene scene, Map<Integer, Object> data) {
         // コンポーネントの追加
         return switch (scene) {
-            case SELECT_MUSIC_SCENE -> new SelectMusicScene(data);
-            case PLAY_MUSIC_SCENE   -> new PlayMusicScene(data);
-            case OPTION_SCENE       -> new OptionScene(data);
+            case SELECT_MUSIC -> new SelectMusicScene(data);
+            case PLAY_MUSIC   -> new PlayMusicScene(data);
+            case OPTION       -> new OptionScene(data);
         };
     }
 

@@ -28,7 +28,7 @@ class Main {
         sceneManager.activateDisplay(data);
 
         // 開始シーンの指定で分岐
-        if(cast.getScene(data) == Scene.PLAY_MUSIC_SCENE) {
+        if(cast.getScene(data) == Scene.PLAY_MUSIC) {
             String fileName = cast.getStrData(data, elem.LOAD_FILE_NAME);
             printMessage(fileName + " で演奏ゲームを開始します.");
         }
@@ -91,11 +91,11 @@ class Main {
             } else {
                 playPart = 0;
             }
-            data.put(elem.SCENE, Scene.PLAY_MUSIC_SCENE);
+            data.put(elem.SCENE, Scene.PLAY_MUSIC);
             data.put(elem.LOAD_FILE_NAME, loadText);
             data.put(elem.PLAY_PART, playPart);
         } else {
-            data.put(elem.SCENE, Scene.SELECT_MUSIC_SCENE);
+            data.put(elem.SCENE, Scene.SELECT_MUSIC);
             data.put(elem.PLAY_PART, 1);
         }
 

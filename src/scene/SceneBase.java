@@ -2,13 +2,8 @@ package scene;
 
 import data.DataCaster;
 import data.DataElements;
-import draw.*;
-import draw.digit.DigitNumber;
-import font.FontUtil;
-import key.KeyController;
-import time.clock.*;
-import time.fps.FrameRateUtil;
-import calc.CalcUtil;
+import scene.key.KeyController;
+import scene.fps.FrameRateUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,26 +42,28 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     protected void init(List<Integer> keyAssign, Map<Integer, Object> data) {
         // クラス内で用いるデータの移動
         this.data = new HashMap<>(data);
-        this.data.put(elem.SCENE_ID, cast.getIntData(this.data, elem.SCENE_ID) + 1);
 
-        // FrameRateUtil, KeyControllerを定義
-        fru = new FrameRateUtil( cast.getIntData(this.data, elem.FRAME_RATE), 0);
-        key = new KeyController(keyAssign);
+        int nextSceneId = cast.getIntData(this.data, elem.SCENE_ID) + 1;
+        this.data.put(elem.SCENE_ID, nextSceneId);
+
+        // FrameRateUtilを定義
+        int frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
+        fru = new FrameRateUtil(frameRate, 0);
 
         // 画面サイズの指定
-        setPreferredSize(new Dimension(
-                cast.getIntData(this.data, elem.DISPLAY_WIDTH), cast.getIntData(this.data, elem.DISPLAY_HEIGHT)
-        ));
+        int displayWidth  = cast.getIntData(this.data, elem.DISPLAY_WIDTH);
+        int displayHeight = cast.getIntData(this.data, elem.DISPLAY_HEIGHT);
+        setPreferredSize(new Dimension(displayWidth, displayHeight) );
 
         // キーリスナの登録
+        key = new KeyController(keyAssign);
         key.setKeyListener(this);
 
         // タイマーの設定
         timer = new Timer(0, this);
         timer.start();
 
-        // 稼働状態にして毎フレームの描画と処理が動くようにする
-        isActive = true;
+        isActive = true; // 稼働状態にして毎フレームの描画と処理が動くようにする
     }
 
     // 機能の消滅
@@ -82,27 +79,10 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     }
 
     // ------------------------------------------------------ //
-
-    // 時刻取得用インスタンス
-    protected final ClockHand milSec = new ClockHandMilli();
-    protected final ClockHand second = new ClockHandSecond();
-    protected final ClockHand minute = new ClockHandMinute();
-    protected final ClockHand hour   = new ClockHandHour();
-
-    // 描画用インスタンス
-    protected final DrawPolygon circle = new DrawOval();
-    protected final DrawPolygon rect = new DrawRect();
-    protected final DrawArc arc = new DrawArc();
-    protected final DrawLine line = new DrawLine();
-    protected final DrawTrapezium dtz = new DrawTrapezium();
-    protected final DigitNumber dn = new DigitNumber();
-
-    // その他インスタンス
+    // インスタンスいろいろ
     protected FrameRateUtil fru;
     protected KeyController key;
     private Timer timer;
-    protected final FontUtil font = new FontUtil();
-    protected final CalcUtil calc = new CalcUtil();
 
     // データの受け渡し用
     protected Map<Integer, Object> data;

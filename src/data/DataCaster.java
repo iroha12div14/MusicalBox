@@ -6,7 +6,7 @@ import scene.Scene;
 import java.util.Map;
 
 // 各シーンで運用されるMap型変数dataの出力時のキャスト用(翻訳)メソッド
-// 単に data.get(key) で取り出すとObject型で出てきちゃうので
+// 単に data.get(scene.key) で取り出すとObject型で出てきちゃうので
 // それを型変換(翻訳)して取り出す役割をもつ
 public class DataCaster {
     // ゲーム内で運用されるデータの「要素」
