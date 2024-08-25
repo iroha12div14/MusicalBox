@@ -1,5 +1,6 @@
 package scenes.playmusic;
 
+import save.SaveDataManager;
 import scenes.header.HeaderGetter;
 import scenes.header.HeaderMaker;
 import scenes.playmusic.judge.JudgeUtil;
@@ -77,7 +78,6 @@ public class PlayMusicScene extends SceneBase {
         int[] subScoreAutoPlayCount = (playPart == MAIN_PART || playPart == NONE)
                 ? sqGetter.getScorePlayCount(sequence, pc.collectionSub() )
                 : sqGetter.getScorePlayCountEmpty();
-
         // 音源データの格納
         printMessage("音源ファイル読み込みと格納", 2);
         String directorySounds = cast.getStrData(this.data, elem.DIRECTORY_SOUNDS);
@@ -86,16 +86,19 @@ public class PlayMusicScene extends SceneBase {
         keySoundLoader.containNoSound();
 
         // 描画インスタンス
-        PartsKeyboard keyboard = new PartsKeyboard();
-        drawer = new PlayMusicDrawer(keyboard, displayWidth, displayHeight, frameRate);
+        drawer = new PlayMusicDrawer(keyboard);
+        drawer.setAnimationTimer(frameRate);
+        drawer.setDisplaySize(displayWidth, displayHeight);
+
         // 判定
-        float keySoundMasterVolume = cast.getFloatData(this.data, elem.MASTER_VOLUME);
         judgeUtil = new JudgeUtil(
-                container,              // 音源コンテナ
-                drawer,                 // 描画インスタンス
-                keyboard,               // キーボード部品インスタンス
-                keySoundMasterVolume    // 主音量
+                container,  // 音源コンテナ
+                drawer,     // 描画インスタンス
+                keyboard    // キーボード部品インスタンス
         );
+        // キー音量の設定
+        float volume = cast.getFloatData(this.data, elem.MASTER_VOLUME);
+        judgeUtil.setKeySoundMasterVolume(volume);
         judgeAuto = (playPart == NONE); // 自動再生の有無
         observer = new KeyPressObserver(judgeUtil); // キー押下の監視インスタンス
 
@@ -109,23 +112,25 @@ public class PlayMusicScene extends SceneBase {
     // 描画したい内容はここ
     @Override
     protected void paintField(Graphics2D g2d) {
-        // 経過時間
         int pastTime = fru.getPastTime();
+        int judgeState = judgeUtil.getJudgeState();
+        int combo = judgeUtil.getCombo();
         float achievement = judgeUtil.getAchievement();
         String acvStrEn = judgeUtil.getAchievementStr(achievement, "Acv", "%");
         int judgeSubDsp = cast.getIntData(data, elem.JUDGEMENT_SUB_DISPLAY);
-        int frameRate = cast.getIntData(data, elem.FRAME_RATE);
+        String msgFPS = fru.msgFPS(false);
+        String msgLatency = fru.msgLatency(500);
 
         drawer.drawBack(g2d); // 背景
         drawer.drawJudgeLine(g2d); // 判定線
         drawer.drawNotes(g2d, mainScore, MAIN_SCORE, pastTime, noteUnitMov, playPart); // ノーツ(メロディ側)
         drawer.drawNotes(g2d, subScore,  SUB_SCORE,  pastTime, noteUnitMov, playPart); // ノーツ(伴奏側)
         drawer.drawKeyBoard(g2d); // キーボード
-        drawer.drawJudgement(g2d, judgeUtil.getJudgeState(), judgeUtil.getCombo(), acvStrEn, judgeSubDsp); // 判定
+        drawer.drawJudgement(g2d, judgeState, combo, acvStrEn, judgeSubDsp); // 判定
         drawer.drawScrollSpeed(g2d, noteUnitMov); // スクロール速度
         drawer.drawMusicProgress(g2d, pastTime, musicEndTime); // 曲進行バー
         drawer.drawFrame(g2d, musicTitle, musicTempo, playPart); // 枠とその他
-        drawer.drawFrameRate(g2d, fru.msgFPS(false), fru.msgLatency(500) ); // フレームレート表示
+        drawer.drawFrameRate(g2d, msgFPS, msgLatency); // フレームレート表示
 
         if( !isMusicStart ) {
             drawer.drawHowToPlay(g2d, playPart); // あそびかた
@@ -133,8 +138,10 @@ public class PlayMusicScene extends SceneBase {
         }
         if(pastTime >= musicEndTime && playPart != NONE) {
             // 結果画面
+            int[] judgeCount = judgeUtil.getJudgeCount();
+            int maxCombo = judgeUtil.getMaxCombo();
             String acvStrJp = judgeUtil.getAchievementStr(achievement, "達成率", "％");
-            drawer.drawResult(g2d, judgeUtil.getJudgeCount(), judgeUtil.getMaxCombo(), acvStrJp);
+            drawer.drawResult(g2d, judgeCount, maxCombo, acvStrJp);
         }
         if(isMusicEnd) {
             drawer.drawFadeOut(g2d); // フェードアウト
@@ -212,12 +219,14 @@ public class PlayMusicScene extends SceneBase {
 
                 if(playPart != NONE) {
                     printAchievementAndTiming();
+
+                    data.put(elem.NOTE_UNIT_MOVE, noteUnitMov); // スクロール速度の保持
+                    playDataSave();
                 }
             }
             // フェードアウト直後の処理（dataの持ち越しとシーン遷移）
-            else if (isMusicEnd && drawer.isEndFadeOut()) {
+            else if (isMusicEnd && drawer.isEndFadeOut() ) {
                 container.closeClips(); // クリップが抱えているリソースを開放
-                data.put(elem.NOTE_UNIT_MOVE, noteUnitMov); // スクロール速度の保持
 
                 printMessage("楽曲の選択に移動します", 3);
                 sceneTransition(Scene.SELECT_MUSIC); // 選曲画面に移動
@@ -258,18 +267,30 @@ public class PlayMusicScene extends SceneBase {
         printMessage("  Total Acv:\t" + totalAcvPoint + "[pt]", 2);
         printMessage("  Timing Ave:\t" + judgeUtil.getTimingAverage() + "[ms]", 2);
         printMessage("  Timing STDEV:\t" + calc.getFloatDU(judgeUtil.getTimingSTDEV(), 2) + "[ms]", 2);
+    }
+
+    private void playDataSave() {
+        int acvPoint = judgeUtil.getAchievementPoint() / 20;
+        int sumAcvPoint = cast.getIntData(data, elem.ACHIEVEMENT_POINT);
+        int totalAcvPoint = sumAcvPoint + acvPoint;
 
         data.put(elem.ACHIEVEMENT_POINT, totalAcvPoint);
+
+        String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
+        String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
+        sdManager.makeSaveData(data, directory, file);
     }
 
     // ------------------------------------------------------ //
 
     // インスタンス諸々
+    PartsKeyboard keyboard = new PartsKeyboard();
     private final PlayMusicDrawer drawer;
     private final KeySoundContainer container;
     private final JudgeUtil judgeUtil;
     private final KeyPressObserver observer;
     private final NotesManager manager = new NotesManager();
+    private final SaveDataManager sdManager = new SaveDataManager();
 
     protected final CalcUtil calc = new CalcUtil();
 
@@ -286,7 +307,7 @@ public class PlayMusicScene extends SceneBase {
     private final int playPart;
     private final static int MAIN_PART = 1;
     private final static int SUB_PART  = 2;
-    private final static int ALL_PART  = 3;
+    private final static int BOTH_PART = 3;
     private final static int NONE = 0;
     private final boolean judgeAuto;
 

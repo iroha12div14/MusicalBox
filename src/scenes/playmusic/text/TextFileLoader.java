@@ -24,8 +24,8 @@ public class TextFileLoader {
 
     // テキストファイルの読み込み
     public List<String> loadText(String fileName) {
+        String filePath = "./" + dirPunchCard + "/" + fileName;
         try {
-            String filePath = "./" + dirPunchCard + "/" + fileName;
             FileReader fileReader = new FileReader(filePath);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 

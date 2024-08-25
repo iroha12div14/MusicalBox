@@ -1,8 +1,6 @@
 package scenes.selectmusic;
 
 import calc.CalcUtil;
-import data.DataCaster;
-import data.DataElements;
 import scenes.draw.*;
 import scenes.font.FontUtil;
 import scenes.animtimer.AnimationTimer;
@@ -22,8 +20,8 @@ public class SelectMusicDrawer {
     private final CalcUtil calc = new CalcUtil();
 
     // 画面サイズ
-    private final int DISPLAY_WIDTH;
-    private final int DISPLAY_HEIGHT;
+    private int displayWidth;
+    private int displayHeight;
 
     // カーソル移動もろもろ
     private static final int TITLEBAR_COUNT = 11;
@@ -33,17 +31,16 @@ public class SelectMusicDrawer {
     private static final int AUTO_PLAY = 0;
     private static final int MAIN_PART = 1;
     private static final int SUB_PART  = 2;
-    private static final int ALL_PART  = 3;
+    private static final int BOTH_PART = 3;
     private final String[] partStrs = new String[]{"自動再生", "メロディ", "伴奏", "メロディ＆伴奏"};
     private final int[] difficultyMaxes = new int[]{0, 5, 5, 10};
 
     // アニメーションタイマー
-    private final AnimationTimer titlebarAnimTimer;     // 12
-    private final AnimationTimer directorAnimTimer;     // 50 (LOOP)
-    private final AnimationTimer fadeInAnimTimer;       // 30
-    private final AnimationTimer fadeOutAnimTimer;      // 64
-    private final AnimationTimer sceneTransitionAnimTimer; // 160
-    private final int stripe = 8;
+    private AnimationTimer titlebarAnimTimer;     // 12
+    private AnimationTimer directorAnimTimer;     // 50 (LOOP)
+    private AnimationTimer fadeInAnimTimer;       // 30
+    private AnimationTimer fadeOutAnimTimer;      // 64
+    private AnimationTimer sceneTransitionAnimTimer; // 160
 
     // 寸法と移動量いろいろ
     private static final int TITLEBAR_X = 30;
@@ -65,6 +62,8 @@ public class SelectMusicDrawer {
 
     private static final int EXPLAIN_HEIGHT = 100;
     private static final int MUSIC_DESC_HEIGHT = 100;
+
+    private static final int STRIPE = 8;
 
     private static final int STRING_TITLE_X = 10;
     private static final int STRING_DESCRIPTION_X = 20;
@@ -95,45 +94,16 @@ public class SelectMusicDrawer {
     };
 
     // 曲データ
-    private final int musicCount;
-    private final String[] musicTitles;
-    private final int[] musicTempos;
-    private final int[] mainDifficulties;
-    private final int[] subDifficulties;
+    private int musicCount;
+    private String[] musicTitles;
+    private int[] musicTempos;
+    private int[] mainDifficulties;
+    private int[] subDifficulties;
 
     // ---------------------------------------------------------------------- //
 
     // コンストラクタ
-    public SelectMusicDrawer(
-            Map<Integer, Object> data,
-            String[] musicTitles,
-            int[] musicTempos,
-            int[] mainDifficulties,
-            int[] subDifficulties
-    ) {
-
-        // dataの受け渡し
-        DataCaster cast = new DataCaster();
-        DataElements elem = new DataElements();
-        DISPLAY_WIDTH  = cast.getIntData(data, elem.DISPLAY_WIDTH);
-        DISPLAY_HEIGHT = cast.getIntData(data, elem.DISPLAY_HEIGHT);
-
-        // フレームレートとアニメーションタイマー
-        int frameRate = cast.getIntData(data, elem.FRAME_RATE);
-        titlebarAnimTimer  = new AnimationTimer(frameRate, 12, false);
-        titlebarAnimTimer.setZero();
-        directorAnimTimer  = new AnimationTimer(frameRate, 50, true);
-        fadeInAnimTimer    = new AnimationTimer(frameRate, 30, false);
-        fadeOutAnimTimer   = new AnimationTimer(frameRate, 64, false);
-        sceneTransitionAnimTimer = new AnimationTimer(frameRate, 160, false);
-
-        // 楽曲選択で用いる内容の受け渡し
-        this.musicTitles = musicTitles;
-        this.musicTempos = musicTempos;
-        this.mainDifficulties = mainDifficulties;
-        this.subDifficulties = subDifficulties;
-        this.musicCount = musicTitles.length;
-
+    public SelectMusicDrawer() {
         // シーン転換時のアニメーション(ランダムで2種)
         stripePattern = new Random().nextInt(2);
     }
@@ -143,7 +113,7 @@ public class SelectMusicDrawer {
     // 背景を描く
     public void drawBack(Graphics2D g2d) {
         rect.fill(g2d, backColor,
-                rect.makeParam(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
+                rect.makeParam(0, 0, displayWidth, displayHeight)
         ); // 黒背景
     }
     // ポインタを描く
@@ -178,11 +148,11 @@ public class SelectMusicDrawer {
     // カーソルを描く
     public void drawCursor(Graphics2D g2d) {
         rect.fill(g2d, cursorInnerColor,
-                rect.makeParam(TITLEBAR_X, TITLEBAR_CENTER_Y, DISPLAY_WIDTH, TITLEBAR_HEIGHT),
+                rect.makeParam(TITLEBAR_X, TITLEBAR_CENTER_Y, displayWidth, TITLEBAR_HEIGHT),
                 rect.makeSide(rect.LEFT, rect.CENTER)
         );
         rect.fill(g2d, cursorFrameColor,
-                rect.makeParam(TITLEBAR_X - 3, TITLEBAR_CENTER_Y, DISPLAY_WIDTH, TITLEBAR_HEIGHT + 6),
+                rect.makeParam(TITLEBAR_X - 3, TITLEBAR_CENTER_Y, displayWidth, TITLEBAR_HEIGHT + 6),
                 rect.makeSide(rect.LEFT, rect.CENTER)
         ); // カーソルが合ってる部分
     }
@@ -202,7 +172,7 @@ public class SelectMusicDrawer {
                     + (i-barCenterPoint) * TITLEBAR_MOVE_Y
                     + (int) (titlebarMovDir * TITLEBAR_MOVE_Y * progress);
             rect.fill(g2d, barColor,
-                    rect.makeParam(x, y, DISPLAY_WIDTH, TITLEBAR_HEIGHT),
+                    rect.makeParam(x, y, displayWidth, TITLEBAR_HEIGHT),
                     barSide
             );
 
@@ -217,10 +187,10 @@ public class SelectMusicDrawer {
     // 説明パーツを描く
     public void drawExplain(Graphics2D g2d) {
         rect.fill(g2d, boxFrameColor,
-                rect.makeParam(0, 0, DISPLAY_WIDTH, EXPLAIN_HEIGHT)
+                rect.makeParam(0, 0, displayWidth, EXPLAIN_HEIGHT)
         );
         rect.fill(g2d, boxInnerColor,
-                rect.makeParam(3, 3, DISPLAY_WIDTH - 6, EXPLAIN_HEIGHT - 6)
+                rect.makeParam(3, 3, displayWidth - 6, EXPLAIN_HEIGHT - 6)
         );
 
         g2d.setColor(Color.WHITE);
@@ -238,12 +208,12 @@ public class SelectMusicDrawer {
     }
     // 曲情報パーツを描く
     public void drawMusicDescBack(Graphics2D g2d) {
-        int y = DISPLAY_HEIGHT - MUSIC_DESC_HEIGHT;
+        int y = displayHeight - MUSIC_DESC_HEIGHT;
         rect.fill(g2d, boxFrameColor,
-                rect.makeParam(0, y, DISPLAY_WIDTH, MUSIC_DESC_HEIGHT)
+                rect.makeParam(0, y, displayWidth, MUSIC_DESC_HEIGHT)
         );
         rect.fill(g2d, boxInnerColor,
-                rect.makeParam(3, y + 3, DISPLAY_WIDTH - 6, MUSIC_DESC_HEIGHT - 6)
+                rect.makeParam(3, y + 3, displayWidth - 6, MUSIC_DESC_HEIGHT - 6)
         );
         g2d.setColor(Color.WHITE);
         g2d.setFont(explainBoldFont);
@@ -256,7 +226,7 @@ public class SelectMusicDrawer {
         int difLevel = getDifLevel(playPart, pointer);
         String musicDifStarAndBlank = getDifStarAndBlank(difLevel, playPart, 23);
         String partStr = partStrs[playPart];
-        int descY = DISPLAY_HEIGHT - MUSIC_DESC_HEIGHT;
+        int descY = displayHeight - MUSIC_DESC_HEIGHT;
 
         g2d.setColor(Color.WHITE);
         g2d.setFont(explainFont);
@@ -269,7 +239,7 @@ public class SelectMusicDrawer {
     // ディレクタを描く
     public void drawDirector(Graphics2D g2d) {
         float progress = 1.0F - directorAnimTimer.getProgress(); // 1.0F → 0.0F (LOOP)
-        int x = TITLEBAR_HEIGHT + (DISPLAY_WIDTH - TITLEBAR_HEIGHT) / 2;
+        int x = TITLEBAR_HEIGHT + (displayWidth - TITLEBAR_HEIGHT) / 2;
         int yt = DIRECTOR_CENTER_Y - DIRECTOR_PADDING_Y + (int) (DIRECTOR_MOVE_Y * progress);
         int yb = DIRECTOR_CENTER_Y + DIRECTOR_PADDING_Y - (int) (DIRECTOR_MOVE_Y * progress);
         int alpha = progress == 1.0F ? 0 : (int) (200 * progress);
@@ -286,70 +256,70 @@ public class SelectMusicDrawer {
     }
     // フェードインの描画
     public void drawFadeIn(Graphics2D g2d) {
-        int x = DISPLAY_WIDTH;
+        int x = displayWidth;
         float progress = 1.0F - fadeInAnimTimer.getProgress();
         int w = (int) (x * progress);
         rect.fill(g2d, Color.BLACK,
-                rect.makeParam(x, 0, w, DISPLAY_HEIGHT),
+                rect.makeParam(x, 0, w, displayHeight),
                 rect.makeSide(rect.RIGHT, rect.TOP)
         );
     }
     // フェードアウトの描画
     public void drawFadeOut(Graphics2D g2d) {
-        float progress = stripe * fadeOutAnimTimer.getProgress();
-        if(progress < stripe) {
+        float progress = STRIPE * fadeOutAnimTimer.getProgress();
+        if(progress < STRIPE) {
             int stripeCount = (int) progress;           // ストライプの本数
             float stripeMod = progress - stripeCount;   // ストライプの端切れ
 
-            float[] w1Mul = {(float) stripeCount / stripe, 1.0F};
-            float[] h1Mul = {1.0F, (float) stripeCount / stripe};
+            float[] w1Mul = {(float) stripeCount / STRIPE, 1.0F};
+            float[] h1Mul = {1.0F, (float) stripeCount / STRIPE};
 
             float[] xMul  = {w1Mul[0], 0.0F};
             float[] yMul  = {0.0F, h1Mul[1]};
-            float[] w2Mul = {1.0F / stripe, stripeMod};
-            float[] h2Mul = {stripeMod, 1.0F / stripe};
+            float[] w2Mul = {1.0F / STRIPE, stripeMod};
+            float[] h2Mul = {stripeMod, 1.0F / STRIPE};
 
             rect.fill(g2d, Color.BLACK,
                     rect.makeParam(0, 0,
-                            (int) (DISPLAY_WIDTH  * w1Mul[stripePattern]),
-                            (int) (DISPLAY_HEIGHT * h1Mul[stripePattern])
+                            (int) (displayWidth * w1Mul[stripePattern]),
+                            (int) (displayHeight * h1Mul[stripePattern])
                     )
             );// 端切れじゃない分を埋める
             rect.fill(g2d, Color.BLACK,
                     rect.makeParam(
-                            (int) (DISPLAY_WIDTH  * xMul[stripePattern]),
-                            (int) (DISPLAY_HEIGHT * yMul[stripePattern]),
-                            (int) (DISPLAY_WIDTH  * w2Mul[stripePattern]),
-                            (int) (DISPLAY_HEIGHT * h2Mul[stripePattern])
+                            (int) (displayWidth * xMul[stripePattern]),
+                            (int) (displayHeight * yMul[stripePattern]),
+                            (int) (displayWidth * w2Mul[stripePattern]),
+                            (int) (displayHeight * h2Mul[stripePattern])
                     )
             ); // 端切れを描く
         } else {
-            rect.fill(g2d, Color.BLACK, rect.makeParam(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT));
+            rect.fill(g2d, Color.BLACK, rect.makeParam(0, 0, displayWidth, displayHeight));
         }
     }
     // フェードアウト後のタイトル表示
     public void drawTitleAfterFadeOut(Graphics2D g2d, int playPart, int cursor) {
         rect.fill(g2d, Color.BLACK,
-                rect.makeParam(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
+                rect.makeParam(0, 0, displayWidth, displayHeight)
         );
 
         String musicTitleStr = musicTitles[getPointer(musicCount, cursor)];
         int musicTitleStrWidth = font.strWidth(g2d, sceneTransTitleFont, musicTitleStr);
         g2d.setColor(Color.WHITE);
         g2d.setFont(sceneTransTitleFont);
-        g2d.drawString(musicTitleStr, DISPLAY_WIDTH / 2 - musicTitleStrWidth / 2, 200);
+        g2d.drawString(musicTitleStr, displayWidth / 2 - musicTitleStrWidth / 2, 200);
 
         String playPartStr = "演奏パート：" + partStrs[playPart];
         int playPartStrWidth   = font.strWidth(g2d, playPartFont, playPartStr);
         g2d.setColor(partColor[playPart]);
         g2d.setFont(playPartFont);
-        g2d.drawString(playPartStr, DISPLAY_WIDTH / 2 - playPartStrWidth / 2, 230);
+        g2d.drawString(playPartStr, displayWidth / 2 - playPartStrWidth / 2, 230);
 
         if(playPart != AUTO_PLAY) {
             int level = getDifLevel(playPart, getPointer(musicCount, cursor));
             String difLevelStr = "難しさ：" + getDifStarAndBlank(level, playPart, 20);
             int difLevelStrWidth = font.strWidth(g2d, playPartFont, difLevelStr);
-            g2d.drawString(difLevelStr, DISPLAY_WIDTH / 2 - difLevelStrWidth / 2, 250);
+            g2d.drawString(difLevelStr, displayWidth / 2 - difLevelStrWidth / 2, 250);
         }
     }
 
@@ -371,7 +341,7 @@ public class SelectMusicDrawer {
         return switch (playPart) {
             case MAIN_PART -> mainDifficulty;
             case SUB_PART  -> subDifficulty;
-            case ALL_PART  -> mainDifficulty + subDifficulty;
+            case BOTH_PART -> mainDifficulty + subDifficulty;
             default -> 0;
         };
     }
@@ -387,7 +357,32 @@ public class SelectMusicDrawer {
         }
     }
 
+    // 描画サイズの設定
+    public void setDisplaySize(int displayWidth, int displayHeight) {
+        this.displayWidth = displayWidth;
+        this.displayHeight = displayHeight;
+    }
+
+    // 曲データの設定
+    public void setMusicsDesc(String[] titles, int[] tempos, int[] mainDifs, int[] subDifs) {
+        musicCount = titles.length;
+        musicTitles = titles;
+        musicTempos = tempos;
+        mainDifficulties = mainDifs;
+        subDifficulties = subDifs;
+    }
+
     // ---------------------------------------------------------------------- //
+
+    // アニメーションタイマーの設定
+    public void setAnimationTimers(int frameRate) {
+        titlebarAnimTimer  = new AnimationTimer(frameRate, 12, false);
+        titlebarAnimTimer.setZero();
+        directorAnimTimer  = new AnimationTimer(frameRate, 50, true);
+        fadeInAnimTimer    = new AnimationTimer(frameRate, 30, false);
+        fadeOutAnimTimer   = new AnimationTimer(frameRate, 64, false);
+        sceneTransitionAnimTimer = new AnimationTimer(frameRate, 160, false);
+    }
 
     // アニメーションタイマーの経過
     public void decAnimTimer(boolean sceneTransition, boolean keyRelease) {

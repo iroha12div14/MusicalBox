@@ -50,17 +50,18 @@ public class JudgeUtil {
     // 達成率算出の配点 PERFECT:100pt, GREAT:60pt, GOOD:20pt, OOPS,MISS:0pt
     private final int[] achievementAllotPoint = {100, 60, 20, 0, 0};
 
+    // 取得したタイミング
     private final List<Integer> timings = new ArrayList<>();
+
+    // -------------------------------------------------------- //
 
     // コンストラクタ
     public JudgeUtil(
             KeySoundContainer container,    // 音源コンテナ
             PlayMusicDrawer drawer,         // 描画インスタンス
-            PartsKeyboard keyboard,         // キーボード
-            float keySoundMasterVolume      // 主音量
+            PartsKeyboard keyboard          // キーボード
     ) {
         player = new KeySoundPlayer(container);
-        player.setMasterVolume(keySoundMasterVolume); // 主音量を設定
         this.drawer = drawer;
         this.keyboard = keyboard;
 
@@ -158,6 +159,8 @@ public class JudgeUtil {
         drawer.startKeyboardAnimTimer(pitch);
     }
 
+    // -------------------------------------------------------- //
+
     // 判定状態の設定
     private void setJudgeState(int j) {
         judgeState = j;
@@ -229,6 +232,10 @@ public class JudgeUtil {
         return (float) Math.sqrt(varianceMulJ / timings.size() );
     }
 
+    // 音量の設定
+    public void setKeySoundMasterVolume(float volume) {
+        player.setMasterVolume(volume); // 主音量を設定
+    }
     // 無音の再生
     public void startNoSound() {
         player.startNoSound();

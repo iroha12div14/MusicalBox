@@ -9,22 +9,8 @@ import java.util.Map;
 import java.util.HashMap;
 
 /**
- * <P>
- * キー入力用のクラス
- * </P>
- * <P>
- * isAnyKeyPress(), isAnyKeyHold() <br />
- * 　　アサインされたなんらかのキーが押されているかを取得
- * </P>
- * <P>
- * avoidChattering() <br />
- * 　　getKeyPressでキー多重入力されるのを防止するメソッド <br />
- * 　　getKeyHoldのみ使用するなら不要 <br />
- * 　　actionListenerを実装したクラスのactionPerformedメソッドで稼働させて <br />
- * 　　キーの多重入力を遮断する
- * </P>
+ * キーの一覧をアサインし、アサインされたキーの押下状態を取得するメソッド
  */
-
 public class KeyController implements KeyListener {
     // 操作キー定義
     private final List<Integer> keyAssign;

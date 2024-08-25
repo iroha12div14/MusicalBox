@@ -1,5 +1,6 @@
 package scenes.option;
 
+import save.SaveDataManager;
 import scenes.draw.selector.DrawSelector;
 import scenes.draw.slider.DrawSlider;
 import scene.Scene;
@@ -94,6 +95,9 @@ public class OptionScene extends SceneBase {
         // 変更を（適用して・適用せず）選曲画面に移動
         else if(isPressEnterKey) {
             commitChange();
+            String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
+            String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
+            sdManager.makeSaveData(data, directory, file);
             sceneTransition(Scene.SELECT_MUSIC);
         }
         else if(isPressSpaceKey) {
@@ -180,6 +184,7 @@ public class OptionScene extends SceneBase {
     private final DrawSlider slider = new DrawSlider();
     private final DrawSelector selector = new DrawSelector();
     private final SoundEffectManager seManager;
+    private final SaveDataManager sdManager = new SaveDataManager();
 
     protected final FontUtil font = new FontUtil();
 

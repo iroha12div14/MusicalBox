@@ -38,9 +38,9 @@ public class SelectMusicScene extends SceneBase {
 
         // パンチカードのデータを読み込み、ヘッダ部分をデータ化
         String directoryPunchCard = cast.getStrData(this.data, elem.DIRECTORY_PUNCH_CARD);
-        TextFilesManager txtManager = new TextFilesManager(directoryPunchCard);
-        Map<String, List<String>> textFiles = txtManager.loadTextFiles();
-        List<String> textFileNames = txtManager.getTextFileNames();
+        TextFilesManager txtManager = new TextFilesManager();
+        Map<String, List<String>> textFiles = txtManager.loadTextFiles(directoryPunchCard);
+        List<String> textFileNames = txtManager.getTextFileNames(directoryPunchCard);
 
         printMessage("ヘッダの読み込み中", 2);
         HeaderMaker hdMaker = new HeaderMaker();
@@ -65,13 +65,13 @@ public class SelectMusicScene extends SceneBase {
         }
 
         // 描画用インスタンス
-        drawer = new SelectMusicDrawer(
-                this.data,
-                musicTitles,
-                musicTempos,
-                mainDifficulties,
-                subDifficulties
-        );
+        int frameRate = cast.getDisplayFrameRate(this.data);
+        int displayWidth = cast.getDisplayWidth(this.data);
+        int displayHeight = cast.getDisplayHeight(this.data);
+        drawer = new SelectMusicDrawer(); // 必要なデータをコンの引数じゃなくて雪駄で渡すことにした
+        drawer.setAnimationTimers(frameRate);
+        drawer.setDisplaySize(displayWidth, displayHeight);
+        drawer.setMusicsDesc(musicTitles, musicTempos, mainDifficulties, subDifficulties);
 
         // SEの読み込み
         String directorySE = cast.getStrData(this.data, elem.DIRECTORY_SE);
@@ -267,17 +267,18 @@ public class SelectMusicScene extends SceneBase {
         return switch (playPart) {
             case MAIN_PART -> mainDifficulty;
             case SUB_PART  -> subDifficulty;
-            case ALL_PART  -> mainDifficulty + subDifficulty;
+            case BOTH_PART -> mainDifficulty + subDifficulty;
             default -> 0; // 自動演奏時
         };
     }
 
     // 次のシーンに引き継ぐデータを作成
     private void inputData() {
-        data.put(elem.MUSIC_TITLE, musicTitles[getPointer(cursor)]);
+        int pointer = getPointer(cursor);
+        data.put(elem.MUSIC_TITLE, musicTitles[pointer]);
         data.put(elem.PLAY_PART, playPart);
-        data.put(elem.PLAY_LEVEL, getDifLevel(playPart, getPointer(cursor)) );
-        data.put(elem.LOAD_FILE_NAME, musicFileNames[getPointer(cursor)]);
+        data.put(elem.PLAY_LEVEL, getDifLevel(playPart, pointer) );
+        data.put(elem.LOAD_FILE_NAME, musicFileNames[pointer]);
         data.put(elem.SELECT_MUSIC_CURSOR, cursor);
     }
 
@@ -318,13 +319,13 @@ public class SelectMusicScene extends SceneBase {
     private static final int PART_KIND = 4;
     private static final int MAIN_PART = 1;
     private static final int SUB_PART  = 2;
-    private static final int ALL_PART  = 3;
+    private static final int BOTH_PART = 3;
     private int playPart;
 
     // 効果音(予約語)
-    private final String SE_KNOCK  = "knock_book01.wav";
-    private final String SE_SWIPE  = "open_cover01.wav";
-    private final String SE_DECIDE = "page_swipe02.wav";
+    private static final String SE_KNOCK  = "knock_book01.wav";
+    private static final String SE_SWIPE  = "open_cover01.wav";
+    private static final String SE_DECIDE = "page_swipe02.wav";
 
     // -------------------------------------------------------------------- //
 

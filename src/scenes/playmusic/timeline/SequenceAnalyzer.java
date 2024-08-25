@@ -15,7 +15,7 @@ public class SequenceAnalyzer {
     private final int NONE      = 0;
     private final int MAIN_PART = 1;
     private final int SUB_PART  = 2;
-    private final int ALL_PART  = 3;
+    private final int BOTH_PART = 3;
 
     // 色々解析
     public float[] analyzeSequence(List<Map<String, Integer>> sequence, float sequenceUnitTime, int arpDistanceTime, int playPart) {
@@ -23,11 +23,11 @@ public class SequenceAnalyzer {
         float playTime = getPlayTime(seq, sequenceUnitTime);
 
         int countMain = switch (playPart) {
-            case MAIN_PART, ALL_PART -> getNotesCount(seq, MAIN_PART);
+            case MAIN_PART, BOTH_PART -> getNotesCount(seq, MAIN_PART);
             default -> 0;
         };
         int countSub = switch (playPart) {
-            case SUB_PART,  ALL_PART -> getNotesCount(seq, SUB_PART);
+            case SUB_PART, BOTH_PART -> getNotesCount(seq, SUB_PART);
             default -> 0;
         };
 
@@ -55,7 +55,7 @@ public class SequenceAnalyzer {
         return switch (playPart) {
             case MAIN_PART -> getNotesCount(sequence, com);
             case SUB_PART  -> getNotesCount(sequence, cos);
-            case ALL_PART  -> getNotesCount(sequence, co);
+            case BOTH_PART -> getNotesCount(sequence, co);
             default -> 0;
         };
     }

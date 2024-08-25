@@ -31,15 +31,15 @@ public class PlayMusicDrawer {
     private final FontUtil font = new FontUtil();
 
     // 画面サイズ
-    private final int DISPLAY_WIDTH;
-    private final int DISPLAY_HEIGHT;
+    private int displayWidth;
+    private int displayHeight;
 
     // タイマー
-    private final AnimationTimer judgeAnimTimer;        // 24
-    private final AnimationTimer[] keyboardAnimTimer = new AnimationTimer[32]; // 10
-    private final AnimationTimer fadeInAnimTimer;       // 30
-    private final AnimationTimer fadeOutAnimTimer;      // 60
-    private final AnimationTimer scrollSpeedAnimTimer;  // 20
+    private AnimationTimer judgeAnimTimer;        // 24
+    private AnimationTimer[] keyboardAnimTimer; // 10
+    private AnimationTimer fadeInAnimTimer;       // 30
+    private AnimationTimer fadeOutAnimTimer;      // 60
+    private AnimationTimer scrollSpeedAnimTimer;  // 20
 
     // 楽譜のパート種別と演奏パート
     private static final int UNDEFINED = -1;
@@ -48,7 +48,7 @@ public class PlayMusicDrawer {
     private static final int NONE_PART = 0;
     private static final int MAIN_PART = 1;
     private static final int SUB_PART  = 2;
-    private static final int ALL_PART  = 3;
+    private static final int BOTH_PART = 3;
 
     // 判定種別
     private static final int JUDGE_PERFECT = 0;
@@ -102,36 +102,17 @@ public class PlayMusicDrawer {
     // ------------------------------------------------------------------------ //
 
     // コンストラクタ
-    public PlayMusicDrawer(
-            PartsKeyboard keyboard,
-            int displayWidth,
-            int displayHeight,
-            int frameRate
-    ) {
+    public PlayMusicDrawer(PartsKeyboard keyboard) {
         this.keyboard = keyboard;
-
-        DISPLAY_WIDTH  = displayWidth;
-        DISPLAY_HEIGHT = displayHeight;
-
-        judgeAnimTimer       = new AnimationTimer(frameRate, 24, false);
-        judgeAnimTimer.setZero();
-        fadeInAnimTimer      = new AnimationTimer(frameRate, 30, false);
-        fadeOutAnimTimer     = new AnimationTimer(frameRate, 60, false);
-        scrollSpeedAnimTimer = new AnimationTimer(frameRate, 20, false);
-        scrollSpeedAnimTimer.setZero();
-        for(int p = 0; p < 32; p++) {
-            keyboardAnimTimer[p] = new AnimationTimer(frameRate, 10, false);
-            keyboardAnimTimer[p].setZero();
-        }
     }
 
     // 背景の描画
     public void drawBack(Graphics2D g2d) {
         drawRect.fill(g2d, new Color(215, 215, 215),
-                drawRect.makeParam(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
+                drawRect.makeParam(0, 0, displayWidth, displayHeight)
         );
         drawRect.fill(g2d, backGray,
-                drawRect.makeParam(3, 3, DISPLAY_WIDTH-6, DISPLAY_HEIGHT-6)
+                drawRect.makeParam(3, 3, displayWidth -6, displayHeight -6)
         );
         drawRect.fill(g2d, Color.BLACK,
                 drawRect.makeParam(pos.laneX(), pos.judgeLineY(), judgeLine.getWidth(), lane.getHeight()),
@@ -305,7 +286,7 @@ public class PlayMusicDrawer {
                     String comboStr = (combo < 10 ? "  " : combo < 100 ? " " : "") + combo + " combo";
                     int comboW = font.strWidth(g2d, comboFont, comboStr);
 
-                    int comboX = DISPLAY_WIDTH / 2 - comboW / 2;
+                    int comboX = displayWidth / 2 - comboW / 2;
                     int comboY = pos.getComboY();
 
                     g2d.setFont(comboFont);
@@ -316,7 +297,7 @@ public class PlayMusicDrawer {
             if(judgeSubDisplay == 2 || judgeSubDisplay == 3) {
                 // 達成率
                 int acvW = font.strWidth(g2d, achivementFont, acvStr);
-                int acvX = DISPLAY_WIDTH / 2 - acvW / 2;
+                int acvX = displayWidth / 2 - acvW / 2;
                 int acvY = judgeSubDisplay == 2 ? pos.getComboY() : pos.getComboY() + 15;
                 g2d.setFont(achivementFont);
                 g2d.setColor(colorAchievement);
@@ -366,10 +347,10 @@ public class PlayMusicDrawer {
         int w = lane.getFullWidth();
         int h = lane.getHeight();
         drawRect.fill(g2d, backGray,
-                drawRect.makeParam(3, 0, DISPLAY_WIDTH-6, y-h)
+                drawRect.makeParam(3, 0, displayWidth -6, y-h)
         );
         drawRect.fill(g2d, new Color(215, 215, 215),
-                drawRect.makeParam(0, 0, DISPLAY_WIDTH, 3)
+                drawRect.makeParam(0, 0, displayWidth, 3)
         );
         drawRect.draw(g2d, Color.WHITE,
                 drawRect.makeParam(x, y, w, h),
@@ -395,8 +376,8 @@ public class PlayMusicDrawer {
 
     // あそびかた説明
     public void drawHowToPlay(Graphics2D g2d, int playPart) {
-        int wCenter = DISPLAY_WIDTH / 2;
-        int hCenter = DISPLAY_HEIGHT / 2;
+        int wCenter = displayWidth / 2;
+        int hCenter = displayHeight / 2;
 
         // 枠と背景
         drawRect.fill(g2d, colorHowToPlayFrame,
@@ -419,7 +400,7 @@ public class PlayMusicDrawer {
         g2d.drawString("あそびかた", wCenter - 60, hCenter - 100);
 
         // 説明セクション(メロディ側)
-        if(playPart == MAIN_PART || playPart == ALL_PART) {
+        if(playPart == MAIN_PART || playPart == BOTH_PART) {
             // 説明文
             int xExpR = wCenter + 20;
             g2d.setColor(Color.WHITE);
@@ -450,7 +431,7 @@ public class PlayMusicDrawer {
         }
 
         // 説明セクション(伴奏側)
-        if(playPart == SUB_PART || playPart == ALL_PART) {
+        if(playPart == SUB_PART || playPart == BOTH_PART) {
             // 説明文
             int xExpL = wCenter - 130;
             g2d.setColor(Color.WHITE);
@@ -487,8 +468,8 @@ public class PlayMusicDrawer {
 
     // リザルト
     public void drawResult(Graphics2D g2d, int[] judgeCount, int maxCombo, String acvStr) {
-        int wCenter = DISPLAY_WIDTH / 2;
-        int hCenter = DISPLAY_HEIGHT / 2;
+        int wCenter = displayWidth / 2;
+        int hCenter = displayHeight / 2;
 
         // 枠と背景
         drawRect.fill(g2d, colorHowToPlayFrame,
@@ -556,12 +537,12 @@ public class PlayMusicDrawer {
     public void drawFadeIn(Graphics2D g2d) {
         for(int s = 0; s < 8; s++) {
             float progress = 1.0F - fadeInAnimTimer.getProgress();
-            int w = (int) (DISPLAY_WIDTH * progress);
+            int w = (int) (displayWidth * progress);
             drawRect.fill(g2d, Color.BLACK,
-                    drawRect.makeParam(0, DISPLAY_HEIGHT * s / 8, w, DISPLAY_HEIGHT / 16)
+                    drawRect.makeParam(0, displayHeight * s / 8, w, displayHeight / 16)
             );
             drawRect.fill(g2d, Color.BLACK,
-                    drawRect.makeParam(DISPLAY_WIDTH, (DISPLAY_HEIGHT * (s * 2 + 1) / 16), w, DISPLAY_HEIGHT / 16),
+                    drawRect.makeParam(displayWidth, (displayHeight * (s * 2 + 1) / 16), w, displayHeight / 16),
                     drawRect.makeSide(drawRect.RIGHT, drawRect.TOP)
             );
         }
@@ -569,8 +550,8 @@ public class PlayMusicDrawer {
 
     // フェードアウトモーション
     public void drawFadeOut(Graphics2D g2d) {
-        int w = DISPLAY_WIDTH / 2;
-        int h = DISPLAY_HEIGHT / 2;
+        int w = displayWidth / 2;
+        int h = displayHeight / 2;
         int r = (w + h) * 2;
         int a = (int) (400 * fadeOutAnimTimer.getProgress() );
         drawArc.fill(g2d, Color.BLACK,
@@ -580,6 +561,21 @@ public class PlayMusicDrawer {
     }
 
     // ------------------------------------------------------------------------ //
+
+    // アニメーションタイマーの設定
+    public void setAnimationTimer(int frameRate) {
+        judgeAnimTimer       = new AnimationTimer(frameRate, 24, false);
+        judgeAnimTimer.setZero();
+        fadeInAnimTimer      = new AnimationTimer(frameRate, 30, false);
+        fadeOutAnimTimer     = new AnimationTimer(frameRate, 60, false);
+        scrollSpeedAnimTimer = new AnimationTimer(frameRate, 20, false);
+        scrollSpeedAnimTimer.setZero();
+        keyboardAnimTimer = new AnimationTimer[32];
+        for(int p = 0; p < 32; p++) {
+            keyboardAnimTimer[p] = new AnimationTimer(frameRate, 10, false);
+            keyboardAnimTimer[p].setZero();
+        }
+    }
 
     // アニメーションタイマーの経過
     public void passAnimTimer(boolean isMusicEnd) {
@@ -609,10 +605,15 @@ public class PlayMusicDrawer {
         return fadeOutAnimTimer.isZero();
     }
     public boolean isEndFadeIn() {
-        return fadeOutAnimTimer.isZero();
+        return fadeInAnimTimer.isZero();
     }
 
     // ------------------------------------------------------------------------ //
+    public void setDisplaySize(int displayWidth, int displayHeight) {
+        this.displayWidth = displayWidth;
+        this.displayHeight = displayHeight;
+    }
+
     public String getPlayPartStr (int playPart) {
         return playPartStr[playPart];
     }

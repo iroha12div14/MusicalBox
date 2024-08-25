@@ -14,7 +14,7 @@ public class KeyPressObserver {
     private static final int NONE      = 0;
     private static final int MAIN_PART = 1;
     private static final int SUB_PART  = 2;
-    private static final int ALL_PART  = 3;
+    private static final int BOTH_PART = 3;
 
     // 今
     public KeyPressObserver(JudgeUtil judgeUtil) {

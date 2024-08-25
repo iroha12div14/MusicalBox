@@ -1,9 +1,15 @@
+import save.SaveDataManager;
 import scene.Scene;
 import scene.SceneManager;
 import data.DataElements;
 import data.DataCaster;
 
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +28,10 @@ class Main {
 
         // dataの初期化
         Map<Integer, Object> data = dataInit(args);
+
+        // ここにセーブデータによる入出力を挟む
+        makeSaveFile(data);
+        data = applySaveFile(data);
 
         // ウインドウを立ち上げ、最初の場面を表示する
         SceneManager sceneManager = cast.getSceneManager(data);
@@ -47,14 +57,15 @@ class Main {
         data.put(elem.SCENE_MANAGER, sceneManager);
 
         // ウインドウの設定
-        data.put(elem.WINDOW_NAME, "オルゴールプレーヤ v0.0.2");
+        data.put(elem.WINDOW_NAME, "オルゴールプレーヤ v0.0.4");
         data.put(elem.DISPLAY_WIDTH, 400);
         data.put(elem.DISPLAY_HEIGHT, 500);
         data.put(elem.DISPLAY_X, 100);
         data.put(elem.DISPLAY_Y, 100);
-        data.put(elem.FRAME_RATE, 60); // フレームレート
 
         // 使用ディレクトリ
+        data.put(elem.FILE_SAVE_DATA,       "saveData.txt");
+        data.put(elem.DIRECTORY_SAVE_DATA,  "_save");
         data.put(elem.DIRECTORY_PUNCH_CARD, "_punchCard");
         data.put(elem.DIRECTORY_SOUNDS,     "_sounds");
         data.put(elem.DIRECTORY_SE,         "_se");
@@ -62,13 +73,13 @@ class Main {
 
         data.put(elem.SCENE_ID, 1);
 
-        data.put(elem.MASTER_VOLUME, 1.0F); //主音量
-
         data.put(elem.SELECT_MUSIC_CURSOR, 0);
 
         data.put(elem.NOTE_MOVE_TIME_OFFSET, 4000);
         data.put(elem.NOTE_UNIT_MOVE, 0.10F);
 
+        data.put(elem.FRAME_RATE, 60); // フレームレート
+        data.put(elem.MASTER_VOLUME, 1.0F); //主音量
         data.put(elem.JUDGEMENT_SUB_DISPLAY, 1); // 判定のサブ表示
 
         // 演奏ゲームで使用するキー
@@ -100,6 +111,56 @@ class Main {
         }
 
         return data;
+    }
+
+    /**
+     * セーブファイルを作成する
+     * @param data data
+     */
+    private static void makeSaveFile(Map<Integer, Object> data) {
+        SaveDataManager manager = new SaveDataManager();
+        DataCaster cast = new DataCaster();
+        DataElements elem = new DataElements();
+
+        String saveDirectory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
+        File saveDir = new File(saveDirectory);
+        String saveFile = "saveData.txt";
+        Path filePath = Paths.get("./" + saveDirectory, saveFile);
+        try {
+            // セーブファイルのディレクトリが無いなら作る
+            if(!saveDir.exists() ) {
+                saveDir.mkdir(); // 成否は一旦無視
+            }
+
+            if( !Files.exists(filePath) ) {
+                Files.createFile(filePath); // ファイルを作成
+                manager.makeSaveData(data, saveDirectory, saveFile); // ファイルを編集
+                printMessage("セーブファイルを新規作成");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * セーブファイルを適用する
+     * @param data data
+     */
+    private static Map<Integer, Object> applySaveFile(Map<Integer, Object> data) {
+        SaveDataManager manager = new SaveDataManager();
+        DataCaster cast = new DataCaster();
+        DataElements elem = new DataElements();
+
+        String saveDirectory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
+        File saveDir = new File(saveDirectory);
+        String saveFile = cast.getStrData(data, elem.FILE_SAVE_DATA);
+        Path filePath = Paths.get("./" + saveDirectory, saveFile);
+        if(saveDir.exists() && Files.exists(filePath) ) {
+            printMessage("セーブデータをロード中");
+            return manager.applySaveData(data, saveDirectory, saveFile);
+        } else {
+            return data;
+        }
     }
 
     // ログ出力用
