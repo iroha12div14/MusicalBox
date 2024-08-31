@@ -34,6 +34,21 @@ public class DataCaster {
         return (Scene) data.get(key);
     }
 
+    // 配列や参照型のもの
+    public int[] getIntArrData (Map<Integer, Object> data, int key) {
+        return (int[]) data.get(key);
+    }
+    public String getStrData (Map<Integer, Object> data, int key) {
+        return (String) data.get(key);
+    }
+
+    public List<Integer> getIntListData(Map<Integer, Object> data, int key) {
+        return (List<Integer>) data.get(key);
+    }
+    public List<String> getStrListData(Map<Integer, Object> data, int key) {
+        return (List<String>) data.get(key);
+    }
+
     // 頻繁に使うもの
     public int getDisplayFrameRate(Map<Integer, Object> data) {
         int key = elements.FRAME_RATE;
@@ -47,31 +62,10 @@ public class DataCaster {
         int key = elements.DISPLAY_HEIGHT;
         return (int) data.get(key);
     }
-    public List<String> getHashData(Map<Integer, Object> data) {
-        int key = elements.MUSIC_HASH_VALUE;
-        return (List<String>) data.get(key);
-    }
 
-    // 配列や参照型のもの
-    public int[] getIntArrData (Map<Integer, Object> data, int key) {
-        return (int[]) data.get(key);
-    }
-    public String getStrData (Map<Integer, Object> data, int key) {
-        return (String) data.get(key);
-    }
-
-    public List<Integer> getIntListData(Map<Integer, Object> data, int key) {
-        return (List<Integer>) data.get(key);
-    }
-    public List<String> getStrListData(Map<Integer, Object> data, int key) {
-        return (List<String >) data.get(key);
-    }
-
-    public Map<String, boolean[]> getHashedBoolData(Map<Integer, Object> data, int key) {
-        return (Map<String, boolean[]>) data.get(key);
-    }
-    public Map<String, float[]> getHashedFloatData(Map<Integer, Object> data, int key) {
-        return (Map<String, float[]>) data.get(key);
+    // 楽曲別データ用（キーにハッシュ値をとるMap型変数）
+    public Map<String, String> getHashedStringData(Map<Integer, Object> data, int key) {
+        return (Map<String, String>) data.get(key);
     }
 
 }

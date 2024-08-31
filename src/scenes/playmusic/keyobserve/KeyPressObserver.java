@@ -51,7 +51,7 @@ public class KeyPressObserver {
             // 条件2a: 自動演奏されるパートで判定線と重なる、もしくは
             // 条件2b: 演奏するパートで一定時間を過ぎた
             boolean terms2a = autoPlayPart && remainTime <= 0;
-            boolean terms2b = !autoPlayPart && remainTime <= judgeUtil.getMissLimit();
+            boolean terms2b = !autoPlayPart && remainTime <= judgeUtil.getLostLimit();
 
             // 条件1 もしくは 条件2かつ(条件2aまたは条件2b) を満たすとき、ノートに対する判定が発生する
             if ( terms1 || terms2 && ( terms2a || terms2b ) ) {

@@ -9,12 +9,12 @@ public class PartsJudge {
     FontUtil font = new FontUtil();
 
     // 判定テキスト
-    private final String[] judgeText = {"PERFECT!!", "GREAT!", "GOOD", "OOPS", "MISS", "AUTO"};
+    private final String[] judgeText = {"PERFECT!!", "GREAT!", "GOOD", "OOPS", "LOST", "AUTO"};
 
     // フォント
     Font judgeFont = font.MSGothic(32, font.BOLD);
-    Font comboFont = font.MSGothic(16);
-    Font achievementFont = font.MSGothic(12);
+    Font comboFont = font.MSGothic(16, font.BOLD);
+    Font achievementFont = font.MSGothic(12, font.BOLD);
 
     // 判定色
     private final Color[][] judgeColor = new Color[][]{

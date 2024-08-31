@@ -22,10 +22,11 @@ public class OptionScene extends SceneBase {
         // 画面サイズ、FPS、キーアサインの初期化
         init(keyAssign, data);
 
-        drawer = new OptionDrawer(
-                cast.getIntData(this.data, elem.DISPLAY_WIDTH),
-                cast.getIntData(this.data, elem.DISPLAY_HEIGHT)
-        );
+        drawer = new OptionDrawer();
+        int displayWidth = cast.getIntData(this.data, elem.DISPLAY_WIDTH);
+        int displayHeight = cast.getIntData(this.data, elem.DISPLAY_HEIGHT);
+        drawer.setDisplaySize(displayWidth, displayHeight);
+        drawer.setBlueprint();
 
         putFrameRate();
         putMasterVolume();
@@ -98,9 +99,11 @@ public class OptionScene extends SceneBase {
             String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
             String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
             sdManager.makeSaveData(data, directory, file);
+            printMessage("設定した内容を適用して終了", 1);
             sceneTransition(Scene.SELECT_MUSIC);
         }
         else if(isPressSpaceKey) {
+            printMessage("設定を適用せず終了", 2);
             sceneTransition(Scene.SELECT_MUSIC);
         }
     }

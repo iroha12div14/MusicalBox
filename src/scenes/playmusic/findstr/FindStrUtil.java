@@ -2,7 +2,7 @@ package scenes.playmusic.findstr;
 
 // 文字検索するメソッド作ったのでせっかくなので置いてみた
 public class FindStrUtil {
-    private final int UNDEFINED = -1;
+    public static final int UNDEFINED = -1;
 
     // 文字検索するメソッド(一旦digStrを経由する)
     public int findStr(String str, String s){
@@ -42,10 +42,5 @@ public class FindStrUtil {
     // 文字検索の成否
     public boolean isNotFind(int s) {
         return s == UNDEFINED;
-    }
-
-    // 検索失敗時の出力内容を返す
-    public int UNDEFINED() {
-        return UNDEFINED;
     }
 }

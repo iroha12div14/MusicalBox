@@ -2,6 +2,7 @@ package scenes.selectmusic.preview;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -67,8 +68,13 @@ public class SongPreviewManager {
                 DataLine.Info info = new DataLine.Info(Clip.class, format);
                 clips[f] = (Clip) AudioSystem.getLine(info);
                 clips[f].open(stream);
-
-            } catch ( // エラーをまとめてポイ
+            }
+            catch (FileNotFoundException e) {
+                // プレビューファイルが無い場合はここを通る
+                // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
+                System.out.println("<Error> " + address + "が見つかりません。 @SongPreviewManager");
+            }
+            catch ( // エラーをまとめてポイ
                     UnsupportedAudioFileException |
                     LineUnavailableException |
                     IOException e
@@ -86,8 +92,10 @@ public class SongPreviewManager {
         }
     }
     private void startPreview(int i) {
-        setVolume(clips[i]);
-        clips[i].start();
+        if(clips[i] != null) {
+            setVolume(clips[i]);
+            clips[i].start();
+        }
         readyPreview = false;
     }
     // 楽曲プレビューの停止
@@ -98,9 +106,11 @@ public class SongPreviewManager {
         }
     }
     private void stopPreview(int i) {
-        clips[i].stop();
-        clips[i].flush();
-        clips[i].setFramePosition(0);
+        if(clips[i] != null) {
+            clips[i].stop();
+            clips[i].flush();
+            clips[i].setFramePosition(0);
+        }
     }
     // ファイル名探索(start, stopどちらでも使う)
     private int findFileName(String scoreTextName) {
@@ -138,9 +148,11 @@ public class SongPreviewManager {
     // クリップをクローズしてなんとやら
     public void closeClips() {
         for(Clip clip : clips) {
-            clip.stop();
-            clip.flush();
-            clip.close();
+            if(clip != null) {
+                clip.stop();
+                clip.flush();
+                clip.close();
+            }
         }
     }
 }

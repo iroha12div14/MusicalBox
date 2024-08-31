@@ -1,5 +1,6 @@
 package scenes.playmusic.timeline;
 
+import scene.fps.FrameRateUtil;
 import scenes.playmusic.findstr.FindStrUtil;
 
 import java.util.Arrays;
@@ -15,6 +16,7 @@ public class PunchCard {
     public static final String TEMPO = "TEMPO";
     public static final String LEVEL = "LEVEL";
     public static final String SEQUENCE = "SEQUENCE";
+    public static final String FILE_NAME = "FILE_NAME";
 
     public static final String MO = "O";
     public static final String MA = "A";
@@ -59,7 +61,7 @@ public class PunchCard {
             case MA -> note.get(MN);
             case SP -> note.get(SA);
             case SA -> note.get(SN);
-            default -> fsu.UNDEFINED();
+            default -> FindStrUtil.UNDEFINED;
         };
     }
 }

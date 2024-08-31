@@ -2,9 +2,11 @@ package scene;
 
 import data.DataCaster;
 import data.DataElements;
+import scenes.announce.AnnounceScene;
 import scenes.option.OptionScene;
 import scenes.playmusic.PlayMusicScene;
 import scenes.selectmusic.SelectMusicScene;
+import scenes.viewtrophy.ViewTrophyScene;
 
 import javax.swing.*;
 import java.awt.*;
@@ -88,13 +90,16 @@ public class SceneManager {
             case SELECT_MUSIC -> new SelectMusicScene(data);
             case PLAY_MUSIC   -> new PlayMusicScene(data);
             case OPTION       -> new OptionScene(data);
+            case VIEW_TROPHY  -> new ViewTrophyScene(data);
+            case ANNOUNCE     -> new AnnounceScene(data);
         };
     }
 
     // デバッグ用 インスタンスの稼働状態の確認
     protected void printMessage(String msg, int tab) {
         String t = "\t".repeat(tab);
-        String name = this.getClass().getName();
+        String[] fullName = this.getClass().getName().split("\\.");
+        String name = fullName[fullName.length-1];
         System.out.printf("%s%s@%s\n", msg, t, name);
     }
 }

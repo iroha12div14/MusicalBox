@@ -2,6 +2,7 @@ package scenes.se;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -46,8 +47,13 @@ public class SoundEffectManager {
                 DataLine.Info info = new DataLine.Info(Clip.class, format);
                 clips[f] = (Clip) AudioSystem.getLine(info);
                 clips[f].open(stream);
-
-            } catch ( // エラーをまとめてポイ
+            }
+            catch (FileNotFoundException e) {
+                // プレビューファイルが無い場合はここを通る
+                // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
+                System.out.println("<Error> " + address + "が見つかりません。 @SoundEffectManager");
+            }
+            catch ( // エラーをまとめてポイ
                     UnsupportedAudioFileException |
                     LineUnavailableException |
                     IOException e
@@ -65,11 +71,13 @@ public class SoundEffectManager {
         }
     }
     private void startSound(int i) {
-        clips[i].stop();
-        clips[i].flush();
-        clips[i].setFramePosition(0);
-        setVolume(clips[i]);
-        clips[i].start();
+        if(clips[i] != null) {
+            clips[i].stop();
+            clips[i].flush();
+            clips[i].setFramePosition(0);
+            setVolume(clips[i]);
+            clips[i].start();
+        }
     }
     private int findFileName(String s) {
         for(int f = 0; f < fileNames.length; f++) {

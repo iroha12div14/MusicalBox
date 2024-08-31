@@ -4,6 +4,7 @@ import scenes.playmusic.keysound.KeySoundContainer;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -45,22 +46,21 @@ public class KeySoundLoader {
         setMessageLoadClips(readyClips, allClipsCount);
         System.out.println(getMessageLoadClips(2));
 
-        try {
-            for (int p = 0; p < pitchCount; p++) {
-                // 音源ファイルのインスタンス化
-                String fileName = "org127" + container.getPitchesName(p) + ".wav";
-                String address = "./" + dirSounds + "/" + fileName;
-                File file = new File(address);
+        for (int p = 0; p < pitchCount; p++) {
+            // 音源ファイルのインスタンス化
+            String fileName = "org127" + container.getPitchesName(p) + ".wav";
+            String address = "./" + dirSounds + "/" + fileName;
+            File file = new File(address);
 
-                // 各音程それぞれの発音回数だけ再生用Clipを用意する
-                // 鳴動枠数 = 手動演奏固定枠 + ある音程pの楽曲のメロディの自動演奏回数 + ある音程pの楽曲の伴奏の自動演奏回数
-                int playCount = mpcc + mainScoreAutoPlayCount[p] + subScoreAutoPlayCount[p];
+            // 各音程それぞれの発音回数だけ再生用Clipを用意する
+            // 鳴動枠数 = 手動演奏固定枠 + ある音程pの楽曲のメロディの自動演奏回数 + ある音程pの楽曲の伴奏の自動演奏回数
+            int playCount = mpcc + mainScoreAutoPlayCount[p] + subScoreAutoPlayCount[p];
 
-                Clip[] clip = new Clip[playCount];
-                for(int c = 0; c < playCount; c++) {
-                    // fileは使いまわしでOK
-                    // stream、format、infoはループの度に定義しないとバグる
-
+            Clip[] clip = new Clip[playCount];
+            for(int c = 0; c < playCount; c++) {
+                // fileは使いまわしでOK
+                // stream、format、infoはループの度に定義しないとバグる
+                try {
                     // AudioSystemはサンプリング系のクラスの窓口となるクラス
                     // ファイルを読み込んだりなど
                     AudioInputStream stream = AudioSystem.getAudioInputStream(file);
@@ -75,40 +75,45 @@ public class KeySoundLoader {
                     // 再生準備
                     clip[c].open(stream);
                     readyClips++;
-
+                }
+                catch (FileNotFoundException e) {
+                    // プレビューファイルが無い場合はここを通る
+                    // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
+                    System.out.println("<Error> " + address + "が見つかりません。 @KeySoundLoader");
+                }
+                catch ( // エラーをまとめてポイ
+                        UnsupportedAudioFileException |
+                        LineUnavailableException |
+                        IOException e )
+                {
+                    failedMessageLoadClips();
+                    System.out.println(getMessageLoadClips(2));
+                    // これなに？
+                    throw new RuntimeException(e);
+                }
+                finally {
                     // 読み込みログ
                     // TODO: コンソールではなく画面に出力する
                     setMessageLoadClips(readyClips, allClipsCount);
-                    if(readyClips == allClipsCount) {
-                        System.out.println(getMessageLoadClips(2));
-                    }
                 }
-                container.setClip(p, clip);
             }
+            container.setClip(p, clip);
+        }
+        if(readyClips == allClipsCount) {
             completeMessageLoadClips();
-            System.out.println(getMessageLoadClips(2));
-            System.out.println("--------------------------------------");
-            return container;
+        } else {
+            failedMessageLoadClips();
         }
-        catch ( // エラーをまとめてポイ
-            UnsupportedAudioFileException |
-            LineUnavailableException |
-            IOException e )
-        {
-            msgLoadClips = "Wave Loading Failed.";
-            System.out.println(getMessageLoadClips(2));
-            // これなに？
-            throw new RuntimeException(e);
-        }
+        System.out.println(getMessageLoadClips(2));
+        System.out.println("--------------------------------------");
+        return container;
     }
 
     // 無音ファイルを読み込んで作ったクリップを格納
     public void containNoSound() {
+        String address = "./" + dirSounds + "/" + noSoundFile;
+        File file = new File(address);
         try {
-            String fileName = noSoundFile;
-            String address = "./" + dirSounds + "/" + fileName;
-            File file = new File(address);
-
             AudioInputStream stream = AudioSystem.getAudioInputStream(file);
             AudioFormat format = stream.getFormat();
 
@@ -117,8 +122,13 @@ public class KeySoundLoader {
 
             c.open(stream);
             container.setNoSoundClip(c);
-
-        } catch (   // エラーをまとめてポイ
+        }
+        catch (FileNotFoundException e) {
+            // プレビューファイルが無い場合はここを通る
+            // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
+            System.out.println("<Error> " + address + "が見つかりません。 @KeySoundLoader");
+        }
+        catch (   // エラーをまとめてポイ
                     // メソッドのシグネチャに入れようかとも思ったけど
                     // メソッドを使ったメソッドにもシグネチャにエラー退避書かなきゃいけなくなるのが面倒でやめた
                 UnsupportedAudioFileException |
@@ -141,5 +151,8 @@ public class KeySoundLoader {
     }
     private void completeMessageLoadClips() {
         msgLoadClips = "Complete Wave Load.       ";
+    }
+    private void failedMessageLoadClips() {
+        msgLoadClips = "Wave Loading Failed.      ";
     }
 }

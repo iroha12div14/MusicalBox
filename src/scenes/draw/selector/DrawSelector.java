@@ -2,7 +2,8 @@ package scenes.draw.selector;
 
 import scenes.draw.DrawPolygon;
 import scenes.draw.DrawRect;
-import scenes.draw.DrawTrapezium;
+import scenes.draw.DrawTrapezoid;
+import scenes.draw.blueprint.Blueprint;
 import scenes.font.FontUtil;
 
 import java.awt.*;
@@ -10,7 +11,10 @@ import java.awt.*;
 public class DrawSelector {
     FontUtil font = new FontUtil();
     DrawPolygon rect = new DrawRect();
-    DrawTrapezium tz = new DrawTrapezium();
+    DrawTrapezoid tz = new DrawTrapezoid();
+
+    Blueprint frame, inner;
+    Blueprint selector;
 
     private final Color frameColor = new Color(250, 150, 0);
 
@@ -21,14 +25,14 @@ public class DrawSelector {
         for(String str : strArray) {
             int width = font.strWidth(g2d, f, str);
             if(i == pointer) {
-                rect.fill(g2d, frameColor,
-                        rect.makeParam(x - 3, y + 4, width + 5, height + 4),
-                        rect.makeSide(rect.LEFT, rect.BOTTOM)
-                );
-                rect.fill(g2d, Color.WHITE,
-                        rect.makeParam(x - 1, y + 2, width + 1, height),
-                        rect.makeSide(rect.LEFT, rect.BOTTOM)
-                );
+                frame = new Blueprint(x - 3, y + 4, width + 5, height + 4);
+                frame.setSide(Blueprint.LEFT, Blueprint.BOTTOM);
+                frame.fillPolygon(g2d, rect, frameColor);
+
+                inner = new Blueprint(x - 1, y + 2, width + 1, height);
+                inner.setSide(Blueprint.LEFT, Blueprint.BOTTOM);
+                inner.fillPolygon(g2d, rect, Color.WHITE);
+
                 font.setStr(g2d, f, Color.BLACK);
                 font.drawStr(g2d, str, x, y);
             } else {
@@ -43,14 +47,12 @@ public class DrawSelector {
     // 項目のセレクタ（縦）
     public void drawVerticalSelector(Graphics2D g2d, String[] strArray, int cursor, int x, int y, Font f, int paddingY) {
         int cursorY = y + paddingY * cursor;
-        tz.fill(g2d, Color.WHITE,
-                tz.makeParam(x, cursorY, 16, 0, 16),
-                tz.makeSide(tz.LEFT, tz.BOTTOM, tz.VERTICAL)
-        );
-        tz.draw(g2d, Color.BLACK,
-                tz.makeParam(x, cursorY, 16, 0, 16),
-                tz.makeSide(tz.LEFT, tz.BOTTOM, tz.VERTICAL)
-        );
+
+        selector = new Blueprint(x, cursorY, 16, 0, 16);
+        selector.setSide(Blueprint.LEFT, Blueprint.BOTTOM, Blueprint.VERTICAL);
+        selector.fillTrapezoid(g2d, Color.WHITE);
+        selector.drawTrapezoid(g2d, Color.BLACK); // 設計図を使いまわして枠線を描く
+
         for(String str : strArray) {
             font.setStr(g2d, f, Color.WHITE);
             font.drawStr(g2d, str, x + 24, y);

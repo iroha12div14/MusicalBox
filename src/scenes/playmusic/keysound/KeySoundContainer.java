@@ -145,13 +145,17 @@ public class KeySoundContainer {
     public void closeClips(){
         for(Clip[] clip : clips) {
             for(Clip c : clip) {
-                c.stop();
-                c.flush();
-                c.close();
+                if(c != null) {
+                    c.stop();
+                    c.flush();
+                    c.close();
+                }
             }
         }
-        noSoundClip.stop();
-        noSoundClip.flush();
-        noSoundClip.close();
+        if(noSoundClip != null) {
+            noSoundClip.stop();
+            noSoundClip.flush();
+            noSoundClip.close();
+        }
     }
 }

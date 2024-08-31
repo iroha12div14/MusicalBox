@@ -35,23 +35,30 @@ public class KeySoundPlayer {
     // オーディオの再生 startAudioManualが手動演奏用、startAudioAutoが自動演奏用
     public void startManualAudio(int scoreKind, int pitch){
         Clip c = container.getManualPlayClip(pitch);
-        setVolume(c, scoreKind, false);
+        if(c != null) {
+            setVolume(c, scoreKind, false);
 
-        // 使いまわすので再生位置を指定し直す
-        c.stop();
-        c.flush();
-        c.setFramePosition(170);
+            // 使いまわすので再生位置を指定し直す
+            c.stop();
+            c.flush();
+            c.setFramePosition(170);
 
-        c.start();
+            c.start();
+        }
     }
     public void startAutoAudio(int scoreKind, int pitch){
         Clip c = container.getAutoPlayClip(pitch);
-        setVolume(c, scoreKind, true);
-        c.start();
+        if(c != null) {
+            setVolume(c, scoreKind, true);
+            c.start();
+        }
     }
     // 無音を再生
     public void startNoSound() {
-        container.getNoSoundClip().start();
+        Clip c = container.getNoSoundClip();
+        if(c != null) {
+            c.start();
+        }
     }
 
     // ランダムな音程の取得

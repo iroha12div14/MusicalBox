@@ -66,7 +66,7 @@ public class SequenceMaker {
                     // ピッチの変更
                     int changedPitch = !fsu.isNotFind(pitch)
                             ? changedPitch(pitch, changeKey)
-                            : fsu.UNDEFINED();
+                            : FindStrUtil.UNDEFINED;
 
                     // ノートの格納
                     notes.put(s, changedPitch);
@@ -87,7 +87,7 @@ public class SequenceMaker {
 
     // キーチェンジ ただし、範囲外の音は全部 Pitch._UNDEFINED 扱いにする
     private int changedPitch(int pitch, int changeKey){
-        int changedPitch = Math.max(pitch + changeKey, fsu.UNDEFINED() );
-        return ( changedPitch < 32 ) ? changedPitch : fsu.UNDEFINED();
+        int changedPitch = Math.max(pitch + changeKey, FindStrUtil.UNDEFINED );
+        return ( changedPitch < 32 ) ? changedPitch : FindStrUtil.UNDEFINED;
     }
 }

@@ -1,6 +1,6 @@
 package scenes.selectmusic;
 
-import scenes.header.HeaderGetter;
+import hash.HashGenerator;
 import scenes.header.HeaderMaker;
 import scene.Scene;
 import scene.SceneBase;
@@ -8,11 +8,12 @@ import scenes.animtimer.AnimationTimer;
 import scenes.selectmusic.preview.SongPreviewManager;
 import scenes.se.SoundEffectManager;
 import calc.CalcUtil;
-import scenes.selectmusic.text.TextFilesManager;
+import text.TextFilesManager;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,41 +38,63 @@ public class SelectMusicScene extends SceneBase {
         rapidInputLoopTimer         = new AnimationTimer(frameRate, 6, true);
 
         // パンチカードのデータを読み込み、ヘッダ部分をデータ化
+        printMessage("ヘッダの読み込み中", 2);
         String directoryPunchCard = cast.getStrData(this.data, elem.DIRECTORY_PUNCH_CARD);
         TextFilesManager txtManager = new TextFilesManager();
-        Map<String, List<String>> textFiles = txtManager.loadTextFiles(directoryPunchCard);
+        Map<String, List<String>> textFiles = txtManager.loadTextFiles(directoryPunchCard); // <FileName, <TextFile>>
         List<String> textFileNames = txtManager.getTextFileNames(directoryPunchCard);
 
-        printMessage("ヘッダの読み込み中", 2);
-        HeaderMaker hdMaker = new HeaderMaker();
-        HeaderGetter hdGetter = new HeaderGetter();
-        musicCount = textFileNames.size();
+        // ヘッダ（楽曲データ）を束ねる
+        int musicCount = textFileNames.size();
+        Map<String, Map<String, Object> > musicHeaders = new HashMap<>(); // <Hash, <FileName, Data>>
+        String[] hashes = new String[musicCount];
         musicFileNames = new String[musicCount];
-        musicTitles = new String[musicCount];
-        musicTempos = new int[musicCount];
-        mainDifficulties = new int[musicCount];
-        subDifficulties = new int[musicCount];
         int f = 0;
         for(String fileName : textFileNames) {
             musicFileNames[f] = fileName;
-
+            hashes[f] = HashGenerator.getSha256(directoryPunchCard, fileName);
             List<String> textFile = textFiles.get(fileName);
-            Map<String, Object> header = hdMaker.makeHeader(textFile);
-            musicTitles[f]      = hdGetter.getTitle(header);
-            musicTempos[f]      = hdGetter.getTempo(header);
-            mainDifficulties[f] = hdGetter.getLevel(header)[0];
-            subDifficulties[f]  = hdGetter.getLevel(header)[1];
+            Map<String, Object> header = new HeaderMaker().makeHeader(textFile);
+
+            header.put("FILE_NAME", fileName);
+            musicHeaders.put(hashes[f], header);
             f++;
         }
 
-        // 描画用インスタンス
+        // プレー記録を抽出して格納
+        Map<String, String> playRecordAll = cast.getHashedStringData(this.data, elem.PLAY_RECORD);
+        int[][] playStates = new int[musicCount][3];
+        float[][] achievements = new float[musicCount][3];
+        int h = 0;
+        for(String hash : hashes) {
+            String playRecordStr = playRecordAll != null
+                    ? playRecordAll.get(hash)
+                    : "0,0.00/0,0.00/0,0.00"; // こんな感じの文法の文字型データをバラして格納する
+            String[] playRecordSplit = playRecordStr.split("/");
+            int p = 0;
+            int[] ps = new int[3];
+            float[] acv = new float[3];
+            for(String record : playRecordSplit) {
+                String[] rec = record.split(",");
+                ps[p] = Integer.parseInt(rec[0]);
+                acv[p] = Float.parseFloat(rec[1]);
+                p++;
+            }
+            playStates[h] = ps;
+            achievements[h] = acv;
+            h++;
+        }
+
+        // 描画用インスタンスの生成と設定
         int frameRate = cast.getDisplayFrameRate(this.data);
         int displayWidth = cast.getDisplayWidth(this.data);
         int displayHeight = cast.getDisplayHeight(this.data);
-        drawer = new SelectMusicDrawer(); // 必要なデータをコンの引数じゃなくて雪駄で渡すことにした
-        drawer.setAnimationTimers(frameRate);
-        drawer.setDisplaySize(displayWidth, displayHeight);
-        drawer.setMusicsDesc(musicTitles, musicTempos, mainDifficulties, subDifficulties);
+        drawer = new SelectMusicDrawer();                   // 必要なデータをコンの引数じゃなくて雪駄で渡すことにした
+        drawer.setAnimationTimer(frameRate);                // アニメーションタイマー
+        drawer.setDisplaySize(displayWidth, displayHeight); // 画面サイズ
+        drawer.setBlueprint();                              // 設計図
+        drawer.setMusicHeaders(musicHeaders, hashes);       // ヘッダ（楽曲データ）
+        drawer.setPlayRecord(playStates, achievements);     // プレー記録
 
         // SEの読み込み
         String directorySE = cast.getStrData(this.data, elem.DIRECTORY_SE);
@@ -95,13 +118,13 @@ public class SelectMusicScene extends SceneBase {
     protected void paintField(Graphics2D g2d) {
         if(!drawer.isEndFadeOut() ) {
             drawer.drawBack(g2d); // 背景
-            drawer.drawPointer(g2d, titlebarMovDir); // ポインタ
+            drawer.drawPointer(g2d, titleBarMoveDirection); // ポインタ
             drawer.drawCursor(g2d); // カーソル
-            drawer.drawTitleBar(g2d, playPart, cursor, titlebarMovDir); // 曲名バー
+            drawer.drawTitleBar(g2d, playPart, cursor, titleBarMoveDirection); // 曲名バー
             drawer.drawExplain(g2d); // 操作説明パーツ
             drawer.drawFrameRate(g2d, fru.msgFPS(false), fru.msgLatency(500) ); // フレームレート
             drawer.drawMusicDescBack(g2d); // 曲情報背景
-            if(drawer.getTitlebarAnimTimer() < 2) {
+            if(drawer.getTitleBarAnimTimer() < 2) {
                 drawer.drawMusicDesc(g2d, playPart, cursor); // 曲情報
             }
             drawer.drawDirector(g2d); // ディレクタ
@@ -128,23 +151,26 @@ public class SelectMusicScene extends SceneBase {
                 boolean pressSpaceKey = key.getKeyPress(KeyEvent.VK_SPACE);
                 boolean pressShiftKey = key.getKeyPress(KeyEvent.VK_SHIFT);
                 boolean pressEnterKey = key.getKeyPress(KeyEvent.VK_ENTER);
+                boolean pressT        = key.getKeyPress(KeyEvent.VK_T);
                 boolean holdUpKey     = key.getKeyHold(KeyEvent.VK_UP);
                 boolean holdDownKey   = key.getKeyHold(KeyEvent.VK_DOWN);
                 boolean releaseAllKey = !key.isAnyKeyPress();
 
                 // キー操作に対する動作
                 // 曲名バーの移動中(正確には着地3F前)にはキー入力を受け付けない
-                if (drawer.getTitlebarAnimTimer() < 3) {
+                if (drawer.getTitleBarAnimTimer() < 3) {
                     if (pressDownKey) {
-                        moveCursor(DIR_DOWN);       // ↓キーで選択楽曲の変更
+                        moveCursor(DIR_DOWN);           // ↓キーで選択楽曲の変更
                     } else if (pressUpKey) {
-                        moveCursor(DIR_UP);         // ↑キーで選択楽曲の変更
+                        moveCursor(DIR_UP);             // ↑キーで選択楽曲の変更
                     } else if (pressSpaceKey) {
-                        changePart();               // Spaceキーでパートの変更
+                        changePart();                   // Spaceキーでパートの変更
                     } else if (pressShiftKey) {
-                        optionSceneTransition();    // Shiftキーでオプション画面に遷移
+                        optionSceneTransition();        // Shiftキーでオプション画面に遷移
+                    } else if (pressT) {
+                        viewTrophySceneTransition();    // Tキーでトロフィー画面に遷移
                     } else if (pressEnterKey) {
-                        selectMusic();              // Enterキーで楽曲を決定する
+                        selectMusic();                  // Enterキーで楽曲を決定する
                     }
                 }
                 // キー継続押下による連射入力
@@ -180,8 +206,9 @@ public class SelectMusicScene extends SceneBase {
                 }
 
                 // プレビュー再生
-                if(drawer.getTitlebarAnimTimer() == 0 && prvManager.isReadyPreview() ) {
-                    String previewFile = musicFileNames[getPointer(cursor)];
+                if(drawer.getTitleBarAnimTimer() == 0 && prvManager.isReadyPreview() ) {
+                    int pointer = getPointer(cursor);
+                    String previewFile = musicFileNames[pointer];
                     prvManager.startPreview(previewFile);
                 }
             }
@@ -197,7 +224,7 @@ public class SelectMusicScene extends SceneBase {
             }
 
             // アニメーションタイマーの経過
-            drawer.decAnimTimer(
+            drawer.pastAnimationTimer(
                     sceneTransition,
                     keyReleaseTimer.isZero()
             );
@@ -217,8 +244,8 @@ public class SelectMusicScene extends SceneBase {
     // 曲名バーを動かす
     private void moveCursor(int dir) {
         cursor += dir;
-        titlebarMovDir = dir;
-        drawer.startTitlebarAnimTimer();
+        titleBarMoveDirection = dir;
+        drawer.startTitleBarAnimTimer();
         prvManager.stopPreview();
         seManager.startSound(SE_SWIPE);
         prvManager.readyStartPreview();
@@ -230,9 +257,16 @@ public class SelectMusicScene extends SceneBase {
         seManager.startSound(SE_KNOCK);
     }
 
+    // ポインタを取得
+    private int getPointer(int cursor) {
+        return calc.mod(cursor, musicFileNames.length);
+    }
+
+    // ------------------------------------------------------ //
+
     // 楽曲を選ぶ
     private void selectMusic() {
-        inputData();
+        setPlayMusicData();
         sceneTransition = true;
         seManager.startSound(SE_DECIDE);
     }
@@ -240,47 +274,37 @@ public class SelectMusicScene extends SceneBase {
     // オプション画面・演奏ゲーム画面へのシーン転換
     private void optionSceneTransition() {
         prvManager.stopPreview(); // プレビューを停止
-        data.put(elem.SELECT_MUSIC_CURSOR, cursor);
-        data.put(elem.PLAY_PART, playPart);
+        setSelectMusicData();
         sceneTrans("オプション", Scene.OPTION);
     }
+    // 実績一覧画面へのシーン転換
+    private void viewTrophySceneTransition() {
+        prvManager.stopPreview(); // プレビューを停止
+        setSelectMusicData();
+        sceneTrans("トロフィー", Scene.VIEW_TROPHY);
+    }
+    // 演奏ゲーム画面へのシーン転換
     private void musicGameSceneTransition() {
         sceneTrans("演奏ゲーム", Scene.PLAY_MUSIC);
     }
+    // 各画面へのシーン転換の共通内容
     private void sceneTrans(String sceneName, Scene scene) {
-        printMessage(sceneName + "画面に移動します", 2);
+        printMessage(sceneName + "画面に移動します", 1);
         prvManager.closeClips();
         sceneTransition(scene);
     }
 
-    // ------------------------------------------------------ //
-
-    // ポインタを取得
-    private int getPointer(int cursor) {
-        return calc.mod(cursor, musicCount);
-    }
-
-    // 演奏レベルの取得
-    private int getDifLevel(int playPart, int pointer) {
-        int mainDifficulty = mainDifficulties[pointer];
-        int subDifficulty  = subDifficulties[pointer];
-        return switch (playPart) {
-            case MAIN_PART -> mainDifficulty;
-            case SUB_PART  -> subDifficulty;
-            case BOTH_PART -> mainDifficulty + subDifficulty;
-            default -> 0; // 自動演奏時
-        };
-    }
-
     // 次のシーンに引き継ぐデータを作成
-    private void inputData() {
+    private void setPlayMusicData() {
         int pointer = getPointer(cursor);
-        data.put(elem.MUSIC_TITLE, musicTitles[pointer]);
-        data.put(elem.PLAY_PART, playPart);
-        data.put(elem.PLAY_LEVEL, getDifLevel(playPart, pointer) );
         data.put(elem.LOAD_FILE_NAME, musicFileNames[pointer]);
-        data.put(elem.SELECT_MUSIC_CURSOR, cursor);
+        setSelectMusicData();
     }
+    private void setSelectMusicData() {
+        data.put(elem.SELECT_MUSIC_CURSOR, cursor);
+        data.put(elem.PLAY_PART, playPart);
+    }
+
 
     // -------------------------------------------------------------------- //
 
@@ -298,13 +322,8 @@ public class SelectMusicScene extends SceneBase {
     private final AnimationTimer holdDownKeyRapidInputTimer;
     private final AnimationTimer rapidInputLoopTimer;
 
-    // 楽曲データ
-    private final int musicCount;
+    // 楽曲ファイル名
     private final String[] musicFileNames;
-    private final String[] musicTitles;
-    private final int[] musicTempos;
-    private final int[] mainDifficulties;
-    private final int[] subDifficulties;
 
     // シーン転換(曲決定するまで停止)
     private boolean sceneTransition = false;
@@ -313,13 +332,10 @@ public class SelectMusicScene extends SceneBase {
     private static final int DIR_UP = -1;
     private static final int DIR_DOWN = 1;
     private int cursor;
-    private int titlebarMovDir = 0; // DIR_UP/DIR_DOWN
+    private int titleBarMoveDirection = 0; // DIR_UP/DIR_DOWN
 
     // 演奏パート
     private static final int PART_KIND = 4;
-    private static final int MAIN_PART = 1;
-    private static final int SUB_PART  = 2;
-    private static final int BOTH_PART = 3;
     private int playPart;
 
     // 効果音(予約語)
@@ -332,9 +348,10 @@ public class SelectMusicScene extends SceneBase {
     // キーアサインの初期化
     private static final List<Integer> keyAssign = Arrays.asList(
             KeyEvent.VK_UP, KeyEvent.VK_DOWN, // 曲名バー移動
-            KeyEvent.VK_SPACE, // パート変更
-            KeyEvent.VK_SHIFT, // オプション(搭載予定)
-            KeyEvent.VK_ENTER  // 曲決定
+            KeyEvent.VK_SPACE,  // パート変更
+            KeyEvent.VK_SHIFT,  // オプション
+            KeyEvent.VK_T,      // トロフィー
+            KeyEvent.VK_ENTER   // 曲決定
     );
 
 }

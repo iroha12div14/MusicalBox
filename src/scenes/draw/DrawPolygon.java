@@ -61,7 +61,7 @@ public abstract class DrawPolygon implements Draw {
         param.put(H, h);
         return param;
     }
-    public Map<Param, Integer> makeParamWithRegular(int x, int y, int r) {
+    public Map<Param, Integer> makeParamRegular(int x, int y, int r) {
         Map<Param, Integer> param = new HashMap<>();
         param.put(X, x);
         param.put(Y, y);

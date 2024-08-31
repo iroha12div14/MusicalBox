@@ -17,7 +17,9 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     @Override
     public void paintComponent(Graphics g){
         super.paintComponents(g);
-        paintField((Graphics2D) g);
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // アンチエイリアスの適用
+        paintField(g2d);
     }
 
     @Override
@@ -74,8 +76,12 @@ public abstract class SceneBase extends JPanel implements ActionListener {
 
     // シーン転換
     protected void sceneTransition(Scene scene) {
-        SceneManager sceneManager = cast.getSceneManager(data);
-        sceneManager.sceneTransition(scene, data, this);
+        // 同フレーム内で誤って2回呼ぶとバグることが判明したのでセーフティネット敷いてる
+        if( !isCalledScene ) {
+            isCalledScene = true;
+            SceneManager sceneManager = cast.getSceneManager(data);
+            sceneManager.sceneTransition(scene, data, this);
+        }
     }
 
     // ------------------------------------------------------ //
@@ -90,6 +96,7 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     protected final DataCaster cast = new DataCaster();
 
     private boolean isActive;
+    private boolean isCalledScene = false; // シーンを誤って2回呼ばない為のセーフティネット
 
     // ------------------------------------------------------ //
 
@@ -97,7 +104,8 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     protected void printMessage(String msg, int tab) {
         int id = cast.getIntData(data, elem.SCENE_ID);
         String t = "\t".repeat(tab);
-        String name = this.getClass().getName();
+        String[] fullName = this.getClass().getName().split("\\.");
+        String name = fullName[fullName.length-1];
         System.out.printf("%s %s@%s<ID%2d>\n", msg, t, name, id);
     }
 }

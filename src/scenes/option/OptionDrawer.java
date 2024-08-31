@@ -1,62 +1,63 @@
 package scenes.option;
 
-import scenes.draw.DrawPolygon;
-import scenes.draw.DrawRect;
-import scenes.font.FontUtil;
+import scenes.drawer.SceneDrawer;
+import scenes.draw.blueprint.Blueprint;
 
 import java.awt.*;
 
-public class OptionDrawer {
-    DrawPolygon rect = new DrawRect();
-    FontUtil font = new FontUtil();
+public class OptionDrawer extends SceneDrawer {
+    // 設計図
+    Blueprint background;
+    Blueprint boxFrame, boxInner;
+    Blueprint menuFrame, menuInner;
 
-    private final int displayWidth;
-    private final int displayHeight;
-
+    // 使用色
     private final Color boxFrameColor = new Color(215, 215, 215, 255);
     private final Color boxInnerColor = new Color(55, 55, 55, 255);
 
     // ------------------------------------------------------- //
 
-    // コン
-    public OptionDrawer(int displayWidth, int displayHeight) {
-        this.displayWidth = displayWidth;
-        this.displayHeight = displayHeight;
-    }
-
     // 背景
     public void drawBack(Graphics2D g2d) {
-        rect.fill(g2d, Color.BLACK,
-                rect.makeParam(0, 0, displayWidth, displayHeight)
-        );
+        background.fillPolygon(g2d, drawRect, Color.BLACK);
     }
 
     // 題字と操作説明と箱
     public void drawBoxTitle(Graphics2D g2d) {
-        rect.fill(g2d, boxFrameColor,
-                rect.makeParam(10, 10, displayWidth - 20, 110)
-        );
-        rect.fill(g2d, boxInnerColor,
-                rect.makeParam(10 + 3, 10 + 3, displayWidth - 26, 110 - 6)
-        );
+        boxFrame.fillPolygon(g2d, drawRect, boxFrameColor);
+        boxInner.fillPolygon(g2d, drawRect, boxInnerColor);
 
         font.setStr(g2d, font.MSGothic(28), Color.WHITE);
         font.drawStr(g2d, "オプション画面(仮設)", 65, 45);
 
         font.setStr(g2d, font.MSGothic(14), Color.WHITE);
         font.drawStr(g2d, "↑↓キーで項目の移動、←→キーで設定の変更", 20, 70);
-        font.drawStr(g2d, "Spaceキーで変更を適用せずに終了", 20, 90);
+        font.drawStr(g2d, "スペースキーで変更を適用せずに終了", 20, 90);
         font.drawStr(g2d, "Enterキーで内容通りに変更して終了", 20, 110);
     }
 
     // メニューの箱
     public void drawBoxMenu(Graphics2D g2d) {
-        rect.fill(g2d, boxFrameColor,
-                rect.makeParam(10, 130, displayWidth - 20, 360)
-        );
-        rect.fill(g2d, boxInnerColor,
-                rect.makeParam(10 + 3, 130 + 3, displayWidth - 26, 360 - 6)
-        );
+        menuFrame.fillPolygon(g2d, drawRect, boxFrameColor);
+        menuInner.fillPolygon(g2d, drawRect, boxInnerColor);
     }
+
+    // 設計図の設定
+    @Override
+    public void setBlueprint() {
+        background = new Blueprint(0, 0, displayWidth, displayHeight);
+
+        boxFrame = new Blueprint(10, 10, displayWidth - 20, 110);
+        boxInner = new Blueprint(10 + 3, 10 + 3, displayWidth - 26, 110 - 6);
+
+        menuFrame = new Blueprint(10, 130, displayWidth - 20, 360);
+        menuInner = new Blueprint(10 + 3, 130 + 3, displayWidth - 26, 360 - 6);
+    }
+
+    @Override
+    protected void setAnimationTimer(int frameRate) { } // 使わない
+
+    @Override
+    protected void pastAnimationTimer() { } // 使わない
 
 }

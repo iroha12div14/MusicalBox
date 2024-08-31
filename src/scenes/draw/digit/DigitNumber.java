@@ -2,7 +2,7 @@ package scenes.draw.digit;
 
 // 依存パッケージ: scenes.draw
 import scenes.draw.Draw;
-import scenes.draw.DrawTrapezium;
+import scenes.draw.DrawTrapezoid;
 
 import java.awt.*;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 // セグメントナンバーの描画
 public class DigitNumber {
     // 台形描画用のクラス
-    private final DrawTrapezium dtz = new DrawTrapezium();
+    private final DrawTrapezoid dtz = new DrawTrapezoid();
 
     // セグメントの描画 size=100 が基準値
     public void drawSegment(Graphics2D g2d, int number, int size, int posX, int posY, Color segColorON, Color segColorOFF) {

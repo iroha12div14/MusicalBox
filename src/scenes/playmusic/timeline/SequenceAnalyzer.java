@@ -10,8 +10,6 @@ public class SequenceAnalyzer {
     private final List<String> com = pc.collectionMain();
     private final List<String> cos = pc.collectionSub();
 
-    private final FindStrUtil fsu = new FindStrUtil();
-
     private final int NONE      = 0;
     private final int MAIN_PART = 1;
     private final int SUB_PART  = 2;
@@ -44,7 +42,7 @@ public class SequenceAnalyzer {
         int count = 0; // notes
         for(Map<String, Integer> notes : sequence) {
             for(String s : col) {
-                if(notes.get(s) != fsu.UNDEFINED() ) {
+                if(notes.get(s) != FindStrUtil.UNDEFINED) {
                     count++;
                 }
             }
@@ -78,7 +76,7 @@ public class SequenceAnalyzer {
                 int seqTime = (int) (notes.get(PunchCard.TIME) * sequenceUnitTime);
                 if(time == seqTime) {
                     for(String s : col ) {
-                        if(notes.get(s) != fsu.UNDEFINED() ) {
+                        if(notes.get(s) != FindStrUtil.UNDEFINED) {
                             int lifetime = getLifetime(arpDistanceTime, s);
                             notesLifetime.add(lifetime);
                         }

@@ -1,11 +1,41 @@
-package scenes.selectmusic.text;
+package text;
 
 // reference: ChatGPT
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
 public class TextFilesManager {
+    /**
+     * セーブファイルを読み込む
+     * @param directory ディレクトリ名（文字列）
+     * @param fileName セーブファイル名（文字列）
+     * @return セーブファイルの内容（文字列リスト）
+     */
+    public List<String> loadTextFile(String directory, String fileName) {
+        String filePath = "./" + directory + "/" + fileName;
+        try {
+            FileReader fileReader = new FileReader(filePath);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            List<String> lines = new ArrayList<>();
+            String line;
+
+            // 1行ずつ読んで中身があったら追加、を行末が来るまでやる
+            while( ( line = bufferedReader.readLine() ) != null ){
+                lines.add(line);
+            }
+
+            // ストリームを閉じて、それに関連するすべてのシステム・リソースを解放
+            bufferedReader.close();
+            return lines;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     /**
      * ディレクトリ内のテキストファイルを読み込み、ファイル名をキーとして内容を格納する
      * @param directory ディレクトリ名（文字列）
