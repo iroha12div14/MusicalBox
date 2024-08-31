@@ -1,7 +1,5 @@
 package scenes.playmusic.keysound;
 
-import scenes.playmusic.keysound.KeySoundContainer;
-
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,7 +18,7 @@ import java.util.*;
 
 public class KeySoundLoader {
     private final KeySoundContainer container = new KeySoundContainer();
-    private String msgLoadClips;
+    private String message;
     private final String dirSounds;
     private final String noSoundFile = "nosound.wav";
 
@@ -39,12 +37,9 @@ public class KeySoundLoader {
                 + Arrays.stream(mainScoreAutoPlayCount).sum()
                 + Arrays.stream(subScoreAutoPlayCount).sum();
         int readyClips = 0;
-        System.out.println("--------------------------------------");
-        initMessageLoadClips();
-        System.out.println(getMessageLoadClips(2));
 
-        setMessageLoadClips(readyClips, allClipsCount);
-        System.out.println(getMessageLoadClips(2));
+        printBorder();
+        messageInit(2);
 
         for (int p = 0; p < pitchCount; p++) {
             // 音源ファイルのインスタンス化
@@ -57,6 +52,7 @@ public class KeySoundLoader {
             int playCount = mpcc + mainScoreAutoPlayCount[p] + subScoreAutoPlayCount[p];
 
             Clip[] clip = new Clip[playCount];
+            boolean loadFail = false;
             for(int c = 0; c < playCount; c++) {
                 // fileは使いまわしでOK
                 // stream、format、infoはループの度に定義しないとバグる
@@ -78,34 +74,32 @@ public class KeySoundLoader {
                 }
                 catch (FileNotFoundException e) {
                     // プレビューファイルが無い場合はここを通る
-                    // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
-                    System.out.println("<Error> " + address + "が見つかりません。 @KeySoundLoader");
+                    // clip[c]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
+                    if( !loadFail ) {
+                        loadFail = true;
+                    }
                 }
                 catch ( // エラーをまとめてポイ
                         UnsupportedAudioFileException |
                         LineUnavailableException |
                         IOException e )
                 {
-                    failedMessageLoadClips();
-                    System.out.println(getMessageLoadClips(2));
-                    // これなに？
+                    messageFailed(2);
                     throw new RuntimeException(e);
-                }
-                finally {
-                    // 読み込みログ
-                    // TODO: コンソールではなく画面に出力する
-                    setMessageLoadClips(readyClips, allClipsCount);
                 }
             }
             container.setClip(p, clip);
+            if(loadFail) {
+                messageFileNodFound(address);
+            }
         }
+        messageLoading(readyClips, allClipsCount, 2);
         if(readyClips == allClipsCount) {
-            completeMessageLoadClips();
+            messageComplete(2);
         } else {
-            failedMessageLoadClips();
+            messageFailed(2);
         }
-        System.out.println(getMessageLoadClips(2));
-        System.out.println("--------------------------------------");
+        printBorder();
         return container;
     }
 
@@ -126,7 +120,7 @@ public class KeySoundLoader {
         catch (FileNotFoundException e) {
             // プレビューファイルが無い場合はここを通る
             // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
-            System.out.println("<Error> " + address + "が見つかりません。 @KeySoundLoader");
+            messageFileNodFound(address);
         }
         catch (   // エラーをまとめてポイ
                     // メソッドのシグネチャに入れようかとも思ったけど
@@ -140,19 +134,31 @@ public class KeySoundLoader {
     }
 
     // ロード時のメッセージの出力
-    public String getMessageLoadClips(int tab) {
-        return msgLoadClips + "\t".repeat(tab) + "@KeySoundLoader";
+    private void printMessageLoadClips(int tab) {
+        String msg = message + "\t".repeat(tab) + "@KeySoundLoader";
+        System.out.println(msg);
     }
-    private void initMessageLoadClips() {
-        msgLoadClips = "Wave Loading...           ";
+    private void printBorder() {
+        System.out.println("--------------------------------------");
     }
-    private void setMessageLoadClips(int readyClips, int allClipsCount) {
-        msgLoadClips = "Loading Wave Files: " + readyClips + "/" + allClipsCount;
+    private void messageInit(int tab) {
+        message = "Wave Loading...           ";
+        printMessageLoadClips(tab);
     }
-    private void completeMessageLoadClips() {
-        msgLoadClips = "Complete Wave Load.       ";
+    private void messageLoading(int readyClips, int allClipsCount, int tab) {
+        message = "Loaded Wave Files: " + readyClips + "/" + allClipsCount;
+        printMessageLoadClips(tab);
     }
-    private void failedMessageLoadClips() {
-        msgLoadClips = "Wave Loading Failed.      ";
+    private void messageComplete(int tab) {
+        message = "Complete Wave Load.       ";
+        printMessageLoadClips(tab);
+    }
+    private void messageFailed(int tab) {
+        message = "Wave Loading Failed.      ";
+        printMessageLoadClips(tab);
+    }
+    private void messageFileNodFound(String address) {
+        message = "  <Error> " + address + "が見つかりません。";
+        System.out.println(message);
     }
 }

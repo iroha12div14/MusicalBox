@@ -55,7 +55,7 @@ class Main {
         data.put(elem.SCENE_MANAGER, sceneManager);
 
         // ウインドウの設定
-        data.put(elem.WINDOW_NAME,    "オルゴールプレーヤ v0.0.4");
+        data.put(elem.WINDOW_NAME,    "オルゴールプレーヤ v0.0.5");
         data.put(elem.DISPLAY_WIDTH,  400);
         data.put(elem.DISPLAY_HEIGHT, 500);
         data.put(elem.DISPLAY_X,      500);
