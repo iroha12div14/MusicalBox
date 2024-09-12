@@ -1,57 +1,56 @@
 package save;
 
-import data.DataCaster;
-import data.DataElements;
-import scenes.playmusic.findstr.FindStrUtil;
+import data.GameDataElements;
+import data.GameDataIO;
 import text.TextFilesManager;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 // 参考元
 // Java（jdk1.8以降）のファイル入出力のサンプルプログラム - https://qiita.com/yasushi-jp/items/125f362e51ed0ff41069
 // Javaプログラムからファイルを作成する方法とは【初心者向け】 - https://style.potepan.com/articles/36198.html
 
+/**
+ * セーブデータを作成・適用などの管理をする
+ */
 public class SaveDataManager {
     /**
      * セーブデータに書き込む
-     * @param data data
-     * @param saveDirectory ディレクトリ名（文字列）
-     * @param saveFile ファイル名（文字列）
+     * @param dataIO data
+     * @param filePath セーブファイルの絶対パス（Path型）
      */
-    public void makeSaveData(Map<Integer, Object> data, String saveDirectory, String saveFile) {
-        Path path = Paths.get("./" + saveDirectory, saveFile);
+    public void makeSaveData(GameDataIO dataIO, Path filePath) {
         try (
-                BufferedWriter bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8);
+                BufferedWriter bw = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
                 PrintWriter pw = new PrintWriter(bw);
         ) {
             // 一般設定
             pw.println(categoryGeneral);
-            writeIntPrint(pw, data, FRAME_RATE, elem.FRAME_RATE);
-            writeFloatPrint(pw, data, MASTER_VOLUME, elem.MASTER_VOLUME);
-            writeIntPrint(pw, data, JUDGEMENT_SUB_DISPLAY, elem.JUDGEMENT_SUB_DISPLAY);
-            writeFloatPrint(pw, data, NOTE_UNIT_MOVE, elem.NOTE_UNIT_MOVE);
+            writeIntPrint(pw, dataIO, FRAME_RATE, GameDataElements.FRAME_RATE);
+            writeFloatPrint(pw, dataIO, MASTER_VOLUME, GameDataElements.MASTER_VOLUME);
+            writeIntPrint(pw, dataIO, JUDGEMENT_SUB_DISPLAY, GameDataElements.JUDGE_SUB_DISPLAY);
+            writeFloatPrint(pw, dataIO, NOTE_UNIT_MOVE, GameDataElements.NOTE_UNIT_MOVE);
             pw.println();
 
             // トロフィー
             pw.println(categoryTrophy);
-            writeIntPrint(pw, data, ACHIEVEMENT_POINT, elem.ACHIEVEMENT_POINT);
-            writeIntPrint(pw, data, PLAY_COUNT, elem.PLAY_COUNT);
-            writeTrophy(pw, data);
+            writeIntPrint(pw, dataIO, ACHIEVEMENT_POINT, GameDataElements.ACHIEVEMENT_POINT);
+            writeIntPrint(pw, dataIO, PLAY_COUNT, GameDataElements.PLAY_COUNT);
+            writeTrophy(pw, dataIO);
             pw.println();
 
             // 楽曲別トロフィー
             pw.println(categoryMusicTrophy);
-            writeMusicTrophy(pw, data);
+            writeMusicTrophy(pw, dataIO);
             pw.println();
 
             // 楽曲別記録
             pw.println(categoryPlayRecord);
-            writePlayRecord(pw, data);
+            writePlayRecord(pw, dataIO);
             pw.println();
         }
         catch (IOException e) {
@@ -59,18 +58,19 @@ public class SaveDataManager {
         }
     }
     // int型データの書き込み
-    private void writeIntPrint(PrintWriter pw, Map<Integer, Object> data, String element, int elem) {
-        int value = cast.getIntData(data, elem);
-        pw.println(element + splitToken + value);
+    private void writeIntPrint(PrintWriter pw, GameDataIO dataIO, String elementStr, GameDataElements element) {
+        int value = dataIO.get(element, Integer.class);
+        pw.println(elementStr + splitToken + value);
     }
     // float型データの書き込み
-    private void writeFloatPrint(PrintWriter pw, Map<Integer, Object> data, String element, int elem) {
-        float value = cast.getFloatData(data, elem);
-        pw.println(element + splitToken + value);
+    private void writeFloatPrint(PrintWriter pw, GameDataIO dataIO, String elementStr, GameDataElements element) {
+        float value = dataIO.get(element, Float.class);
+        pw.println(elementStr + splitToken + value);
     }
     // 一般実績の書き込み
-    private void writeTrophy(PrintWriter pw, Map<Integer, Object> data) {
-        List<Integer> trophies = cast.getIntListData(data, elem.TROPHY);
+    @SuppressWarnings("")
+    private void writeTrophy(PrintWriter pw, GameDataIO dataIO) {
+        List<Integer> trophies = dataIO.getIntList(GameDataElements.TROPHY);
         StringBuilder str = new StringBuilder();
         int len = trophies.size();
         if(len != 0) {
@@ -82,38 +82,36 @@ public class SaveDataManager {
                 }
             }
         }
-        pw.println(TROPHY_LIST + splitToken + str.toString() );
+        pw.println(TROPHY_LIST + splitToken + str);
     }
     // 楽曲別実績の書き込み
-    private void writeMusicTrophy(PrintWriter pw, Map<Integer, Object> data) {
-        List<String> musicTrophies = cast.getStrListData(data, elem.MUSIC_TROPHY);
+    private void writeMusicTrophy(PrintWriter pw, GameDataIO dataIO) {
+        List<String> musicTrophies = dataIO.getStrList(GameDataElements.MUSIC_TROPHY);
         for(String trophy : musicTrophies) {
             pw.println(trophy);
         }
     }
     // 楽曲別記録の書き込み
-    private void writePlayRecord(PrintWriter pw, Map<Integer, Object> data) {
-        Map<String, String> records = cast.getHashedStringData(data, elem.PLAY_RECORD);
-        List<String> hashes = cast.getStrListData(data, elem.MUSIC_HASH_VALUE);
+    private void writePlayRecord(PrintWriter pw, GameDataIO dataIO) {
+        Map<String, String> records = dataIO.getHashedPlayRecords(GameDataElements.PLAY_RECORD);
+        List<String> hashes = dataIO.getStrList(GameDataElements.MUSIC_HASH_VALUE);
         for(String hash : hashes) {
-            String record = records.get(hash);
+            String record = records.getOrDefault(hash, playRecordDefault);
             pw.println(hash + splitToken + record);
         }
     }
 
     /**
      * セーブファイルを解析し、適用する
-     * @param data data
-     * @param directory ディレクトリ名（文字列）
-     * @param saveFile セーブファイル名（文字列）
+     * @param dataIO data
+     * @param filePath セーブファイルの絶対パス（文字型）
      * @return 適用後のdata
      */
-    public Map<Integer, Object> applySaveData(Map<Integer, Object> data, String directory, String saveFile) {
-        data = new HashMap<>(data);
-        List<String> lines = new TextFilesManager().loadTextFile(directory, saveFile);
+    public GameDataIO applySaveData(GameDataIO dataIO, String filePath) {
+        List<String> lines = new TextFilesManager().loadTextFile(filePath);
         int mode = 0;
         List<Integer> trophies = new ArrayList<>();
-        List<String> musicHashValues = cast.getStrListData(data, elem.MUSIC_HASH_VALUE);
+        List<String> musicHashValues = dataIO.getStrList(GameDataElements.MUSIC_HASH_VALUE);
         List<String> musicTrophies = new ArrayList<>();
         Map<String, String > playRecord = new HashMap<>();
         for(String line : lines) {
@@ -137,27 +135,26 @@ public class SaveDataManager {
                 }
 
                 if(mode == 1) {
-                    // TODO: なんとかして省略する
                     if(Objects.equals(keyStr, FRAME_RATE) ) {
-                        data.put(elem.FRAME_RATE, Integer.parseInt(valStr) );
+                        dataIO.put(GameDataElements.FRAME_RATE, Integer.parseInt(valStr) );
                     }
                     else if(Objects.equals(keyStr, MASTER_VOLUME) ) {
-                        data.put(elem.MASTER_VOLUME, Float.parseFloat(valStr) );
+                        dataIO.put(GameDataElements.MASTER_VOLUME, Float.parseFloat(valStr) );
                     }
                     else if(Objects.equals(keyStr, JUDGEMENT_SUB_DISPLAY) ) {
-                        data.put(elem.JUDGEMENT_SUB_DISPLAY, Integer.parseInt(valStr) );
+                        dataIO.put(GameDataElements.JUDGE_SUB_DISPLAY, Integer.parseInt(valStr) );
                     }
                     else if(Objects.equals(keyStr, NOTE_UNIT_MOVE) ) {
-                        data.put(elem.NOTE_UNIT_MOVE, Float.parseFloat(valStr) );
+                        dataIO.put(GameDataElements.NOTE_UNIT_MOVE, Float.parseFloat(valStr) );
                     }
 
                 } else if(mode == 2) {
                     // 累積ポイントや回数
                     if(Objects.equals(keyStr, ACHIEVEMENT_POINT) ) {
-                        data.put(elem.ACHIEVEMENT_POINT, Integer.parseInt(valStr) );
+                        dataIO.put(GameDataElements.ACHIEVEMENT_POINT, Integer.parseInt(valStr) );
                     }
                     else if(Objects.equals(keyStr, PLAY_COUNT) ) {
-                        data.put(elem.PLAY_COUNT, Integer.parseInt(valStr) );
+                        dataIO.put(GameDataElements.PLAY_COUNT, Integer.parseInt(valStr) );
                     }
                     // トロフィー
                     // (TROPHY_LIST): 1001,1002,1011,2001   みたいな感じ
@@ -165,7 +162,7 @@ public class SaveDataManager {
                         if( !valStr.isEmpty() ) {
                             String[] values = valStr.split(",");
                             for (String val : values) {
-                                trophies.add(Integer.parseInt(val));
+                                trophies.add(Integer.parseInt(val) );
                             }
                         }
                     }
@@ -188,18 +185,60 @@ public class SaveDataManager {
                 }
             }
         }
-        data.put(elem.TROPHY, trophies);
-        data.put(elem.MUSIC_TROPHY, musicTrophies);
-        if(mode == 4) { // 折角初期化したデータを空マップを埋めてしまうバグが出たので一時的対処
-            data.put(elem.PLAY_RECORD, playRecord);
+        dataIO.putIntList(GameDataElements.TROPHY, trophies);
+        dataIO.putStrList(GameDataElements.MUSIC_TROPHY, musicTrophies);
+        if(mode == 4) { // 折角初期化したデータを空マップで埋めてしまうバグが出たので一時的対処
+            dataIO.putHashedPlayRecords(GameDataElements.PLAY_RECORD, playRecord);
         }
-        return data;
+        return dataIO;
+    }
+
+    // プレー記録の初期状態
+    public static String playRecordDefault() {
+        return playRecordDefault;
+    }
+
+    /**
+     * プレー記録を再構成
+     * @param playState プレー状態
+     * @param achievement 達成率
+     * @param playRecordStr 構成前のプレー記録（文字列）
+     */
+    public String makePlayRecord(int playState, float achievement, int playPart, String playRecordStr) {
+        // 文字列の記録を構文解析
+        String[] playRecords = playRecordStr.split("/");
+        int[] playStateArr = new int[3];
+        float[] achievementArr = new float[3];
+        int i = 0;
+        for(String playRecord : playRecords) {
+            String[] rcd = playRecord.split(",");     // 文字型のプレー記録を分解
+            playStateArr[i] = Integer.parseInt(rcd[0]);     // プレー状態を格納
+            achievementArr[i] = Float.parseFloat(rcd[1]);   // 達成率を格納
+            i++;
+        }
+
+        // 上回った記録を更新
+        if(playState > playStateArr[playPart - 1]) {
+            playStateArr[playPart - 1] = playState;
+        }
+        if(achievement > achievementArr[playPart - 1]) {
+            achievementArr[playPart - 1] = achievement;
+        }
+
+        StringBuilder recordStr = new StringBuilder();
+        for(int j = 0; j < 3; j++) {
+            recordStr.append(playStateArr[j]);
+            recordStr.append(",");
+            recordStr.append(achievementArr[j]);
+            if(j != 2) {
+                recordStr.append("/");
+            }
+        }
+
+        return recordStr.toString();
     }
 
     // ----------------------------------------------------------------------- //
-    private final DataCaster cast = new DataCaster();
-    private final DataElements elem = new DataElements();
-
     private final String categoryGeneral = "#GENERAL";
     private final String categoryTrophy = "#TROPHY";
     private final String categoryMusicTrophy = "#MUSIC_TROPHY";
@@ -214,4 +253,6 @@ public class SaveDataManager {
     private final String ACHIEVEMENT_POINT = "ACHIEVEMENT_POINT";
     private final String PLAY_COUNT = "PLAY_COUNT";
     private final String TROPHY_LIST = "LIST";
+
+    private static final String playRecordDefault = "0,0.00/0,0.00/0,0.00";
 }

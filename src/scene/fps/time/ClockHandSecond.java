@@ -4,7 +4,7 @@ package scene.fps.time;
 public class ClockHandSecond extends ClockHand {
     @Override
     public int getTime() {
-        return time(Field.SECOND);
+        return time(Unit.SECOND);
     }
 
     @Override

@@ -4,6 +4,9 @@ import scenes.font.FontUtil;
 
 import java.awt.*;
 
+/**
+ * 判定文字パーツ、およびそのフォントや色の定義
+ */
 public class PartsJudge {
     // フォント用のインスタンス
     FontUtil font = new FontUtil();
@@ -11,7 +14,7 @@ public class PartsJudge {
     // 判定テキスト
     private final String[] judgeText = {"PERFECT!!", "GREAT!", "GOOD", "OOPS", "LOST", "AUTO"};
 
-    // フォント
+    // 使用フォント
     Font judgeFont = font.MSGothic(32, font.BOLD);
     Font comboFont = font.MSGothic(16, font.BOLD);
     Font achievementFont = font.MSGothic(12, font.BOLD);
@@ -48,5 +51,8 @@ public class PartsJudge {
     }
     public Color getComboColor() {
         return comboColor;
+    }
+    public Color getAchievementColor() {
+        return achievementColor;
     }
 }

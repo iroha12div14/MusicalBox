@@ -1,20 +1,19 @@
 package scenes.announce;
 
+import data.GameDataElements;
+import data.GameDataIO;
 import scene.Scene;
 import scene.SceneBase;
-import scenes.announce.AnnounceDrawer;
 import trophy.TrophyList;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class AnnounceScene extends SceneBase {
     // 使用キー
-    private final List<Integer> keyAssign = Arrays.asList(KeyEvent.VK_ENTER);
+    private static final List<Integer> KEY_ASSIGN = List.of(KeyEvent.VK_ENTER);
 
     // 描画用インスタンス
     private final AnnounceDrawer drawer = new AnnounceDrawer();
@@ -22,18 +21,20 @@ public class AnnounceScene extends SceneBase {
     // 新規実績の一覧
     private final List<String> newTrophiesStr = new ArrayList<>();
 
-    public AnnounceScene(Map<Integer, Object> data) {
-        init(keyAssign, data);
+    public AnnounceScene(GameDataIO dataIO) {
+        init(KEY_ASSIGN, dataIO);
+        data.put(GameDataElements.SCENE, Scene.ANNOUNCE);
 
         // 新規トロフィー
-        List<Integer> newGeneralTrophy = cast.getIntListData(this.data, elem.NEW_GENERAL_TROPHY);
-        String newMusicTrophy = cast.getStrData(this.data, elem.NEW_MUSIC_TROPHY);
+        List<Integer> newGeneralTrophy = data.getIntList(GameDataElements.NEW_GENERAL_TROPHY);
+        String newMusicTrophy = data.get(GameDataElements.NEW_MUSIC_TROPHY, String.class);
 
-        int displayWidth  = cast.getDisplayWidth(this.data);
-        int displayHeight = cast.getDisplayHeight(this.data);
+        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
+        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
         drawer.setDisplaySize(displayWidth, displayHeight);
         drawer.setBlueprint();
-        int frameRate = cast.getDisplayFrameRate(this.data);
+
+        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
         drawer.setAnimationTimer(frameRate);
 
         // 新規実績解除が無いなら選曲画面にリダイレクト
@@ -43,15 +44,15 @@ public class AnnounceScene extends SceneBase {
         }
         else {
             for(int trophy : newGeneralTrophy) {
-                newTrophiesStr.add(TrophyList.getGenTrophy(trophy));
+                newTrophiesStr.add(TrophyList.getGenTrophy(trophy) );
             }
             if(newMusicTrophy != null) {
-                newTrophiesStr.add(TrophyList.getMusicTrophy(newMusicTrophy));
+                newTrophiesStr.add(TrophyList.getMusicTrophy(newMusicTrophy) );
             }
 
             // 表示済のデータを消去
-            this.data.put(elem.NEW_GENERAL_TROPHY, new ArrayList<Integer>() );
-            this.data.put(elem.NEW_MUSIC_TROPHY, null);
+            data.putIntList(GameDataElements.NEW_GENERAL_TROPHY, new ArrayList<>() );
+            data.put(GameDataElements.NEW_MUSIC_TROPHY, null, String.class);
         }
     }
 

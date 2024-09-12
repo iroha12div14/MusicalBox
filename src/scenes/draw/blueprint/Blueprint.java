@@ -9,6 +9,9 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 図形を描画するためのパラメータ（設計図）クラス。
+ */
 public class Blueprint {
     // 定数
     public static final int CENTER = 0;
@@ -34,10 +37,10 @@ public class Blueprint {
 
     /**
      * 長方形や楕円のパラメータ設定
-     * @param anchorX アンカーのX座標
-     * @param anchorY アンカーのY座標
-     * @param width 幅
-     * @param height 高さ
+     * @param anchorX   アンカーのX座標
+     * @param anchorY   アンカーのY座標
+     * @param width     幅
+     * @param height    高さ
      */
     public Blueprint(int anchorX, int anchorY, int width, int height) {
         this.anchorX = anchorX;
@@ -48,9 +51,9 @@ public class Blueprint {
 
     /**
      * 正方形や正円のパラメータ設定
-     * @param anchorX アンカーのX座標
-     * @param anchorY アンカーのY座標
-     * @param radius 半径
+     * @param anchorX   アンカーのX座標
+     * @param anchorY   アンカーのY座標
+     * @param radius    半径
      */
     public Blueprint(int anchorX, int anchorY, int radius) {
         this.anchorX = anchorX;
@@ -59,11 +62,11 @@ public class Blueprint {
     }
     /**
      * 台形や三角形のパラメータ設定
-     * @param anchorX アンカーのX座標
-     * @param anchorY アンカーのY座標
-     * @param topWidth 上辺
-     * @param bottomWidth 下辺
-     * @param height 高さ
+     * @param anchorX       アンカーのX座標
+     * @param anchorY       アンカーのY座標
+     * @param topWidth      上辺
+     * @param bottomWidth   下辺
+     * @param height        高さ
      */
     public Blueprint(int anchorX, int anchorY, int topWidth, int bottomWidth, int height) {
         this.anchorX = anchorX;
@@ -74,12 +77,12 @@ public class Blueprint {
     }
     /**
      * 弧や扇形のパラメータ設定
-     * @param anchorX アンカーのX座標
-     * @param anchorY アンカーのY座標
-     * @param width 幅
-     * @param height 高さ
-     * @param angle 角度①
-     * @param angle2 角度②(角度①からの増分ではない)
+     * @param anchorX   アンカーのX座標
+     * @param anchorY   アンカーのY座標
+     * @param width     幅
+     * @param height    高さ
+     * @param angle     角度①
+     * @param angle2    角度②(角度①からの増分ではない)
      */
     public Blueprint(int anchorX, int anchorY, int width, int height, int angle, int angle2) {
         this(anchorX, anchorY, width, height);
@@ -101,7 +104,7 @@ public class Blueprint {
      * 台形の上下左右寄せと向きの設定
      * @param sideX 左右寄せ LEFTなら左寄せ、RIGHTなら右寄せ
      * @param sideY 上下寄せ TOPなら上寄せ、BOTTOMなら下寄せ
-     * @param dir 向き HORIZONTALなら上下辺が水平、VERTICALなら垂直
+     * @param dir   向き HORIZONTALなら上下辺が水平、VERTICALなら垂直
      */
     public void setSide(int sideX, int sideY, int dir) {
        setSide(sideX, sideY);
@@ -195,26 +198,29 @@ public class Blueprint {
     public void drawPolygon(Graphics2D g2d, DrawPolygon drawStyle, Color color) {
         drawStyle.draw(g2d, color, param(), side() );
     }
-    public void drawRegular(Graphics2D g2d, DrawPolygon drawStyle, Color color) {
-        drawStyle.drawRegular(g2d, color, param(), side() );
-    }
-    public void drawTrapezoid(Graphics2D g2d, Color color) {
-        DrawTrapezoid drawStyle = new DrawTrapezoid();
-        drawStyle.draw(g2d, color, paramTz(), sideTz() );
-    }
-    public void drawArc(Graphics2D g2d, Color color) {
-        DrawArc drawStyle = new DrawArc();
-        drawStyle.draw(g2d, color, paramArc(), side() );
-    }
     public void fillPolygon(Graphics2D g2d, DrawPolygon drawStyle, Color color) {
         drawStyle.fill(g2d, color, param(), side() );
+    }
+
+    public void drawRegular(Graphics2D g2d, DrawPolygon drawStyle, Color color) {
+        drawStyle.drawRegular(g2d, color, param(), side() );
     }
     public void fillRegular(Graphics2D g2d, DrawPolygon drawStyle, Color color) {
         drawStyle.fillRegular(g2d, color, paramReg(), side() );
     }
+
+    public void drawTrapezoid(Graphics2D g2d, Color color) {
+        DrawTrapezoid drawStyle = new DrawTrapezoid();
+        drawStyle.draw(g2d, color, paramTz(), sideTz() );
+    }
     public void fillTrapezoid(Graphics2D g2d, Color color) {
         DrawTrapezoid drawStyle = new DrawTrapezoid();
         drawStyle.fill(g2d, color, paramTz(), sideTz() );
+    }
+
+    public void drawArc(Graphics2D g2d, Color color) {
+        DrawArc drawStyle = new DrawArc();
+        drawStyle.draw(g2d, color, paramArc(), side() );
     }
     public void fillArc(Graphics2D g2d, Color color) {
         DrawArc drawStyle = new DrawArc();

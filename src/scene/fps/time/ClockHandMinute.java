@@ -4,11 +4,11 @@ package scene.fps.time;
 public class ClockHandMinute extends ClockHand {
     @Override
     public int getTime() {
-        return time(Field.MINUTE);
+        return time(Unit.MINUTE);
     }
     @Override
     public int angleCalc() {
-        int sec = time(Field.SECOND);
+        int sec = time(Unit.SECOND);
         int min = getTime();
         return (270 + min*6 + sec/10) % 360;
     }

@@ -1,17 +1,20 @@
 package trophy;
 
-import data.DataCaster;
-import data.DataElements;
+import data.GameDataElements;
+import data.GameDataIO;
 
 import java.util.*;
 
+/**
+ * 主にトロフィー取得の条件をチェックして、トロフィー（数値やハッシュ値）を返すクラス。
+ */
 public class TrophyGenerator {
     /**
      * 未取得トロフィーの一覧に追加する
-     * @param ownTrophies 取得済みトロフィー
-     * @param getTrophies 追加される未取得トロフィーの一覧
-     * @param terms トロフィーの取得条件
-     * @param trophy 対象のトロフィー
+     * @param ownTrophies   取得済みトロフィー
+     * @param getTrophies   追加される未取得トロフィーの一覧
+     * @param terms         トロフィーの取得条件
+     * @param trophy        対象のトロフィー
      */
     private void addTrophy(List<Integer> ownTrophies, List<Integer> getTrophies, boolean terms, int trophy) {
         if(terms && !ownTrophies.contains(trophy) ) {
@@ -22,23 +25,23 @@ public class TrophyGenerator {
     /**
      * トロフィーの獲得の有無を全部網羅してチェックする。
      * あとは返した側でdataに書き込んだり、外部テキストに出力したり、これをキーとしてトロフィー名を画面に表示したり
-     * @param maxCombo 最大コンボ
-     * @param judgeCount 判定数
-     * @param achievement 達成率
-     * @param allPlayCount 累計演奏ゲーム回数
-     * @param achievementPoint Achievement Point
-     * @param data data
+     * @param maxCombo          最大コンボ
+     * @param judgeCount        判定数
+     * @param achievement       達成率
+     * @param allPlayCount      累計演奏ゲーム回数
+     * @param achievementPoint  Achievement Point
+     * @param dataIO            ゲーム内でやり取りされるデータの入出力を行う
      * @return 獲得したトロフィーのリスト（整数値リスト）
      */
     public List<Integer> getTrophyByResult(
-            int maxCombo,               // 最大コンボ
-            int[] judgeCount,           // 判定数
-            float achievement,          // 達成率
-            int allPlayCount,           // 累計演奏ゲーム回数
-            int achievementPoint,       // Achievement Point
-            Map<Integer, Object> data   // data
+            int maxCombo,           // 最大コンボ
+            int[] judgeCount,       // 判定数
+            float achievement,      // 達成率
+            int allPlayCount,       // 累計演奏ゲーム回数
+            int achievementPoint,   // Achievement Point
+            GameDataIO dataIO         // data
     ) {
-        List<Integer> ownTrophies = cast.getIntListData(data, elem.TROPHY);
+        List<Integer> ownTrophies = dataIO.getIntList(GameDataElements.TROPHY);
         List<Integer> getTrophies = new ArrayList<>();
 
         // 最大コンボ系
@@ -76,9 +79,9 @@ public class TrophyGenerator {
         addTrophy(ownTrophies, getTrophies, isAllPlayCount10plus(allPlayCount), TrophyList.ALL_PLAY_COUNT_10PLUS);
         addTrophy(ownTrophies, getTrophies, isAllPlayCount100plus(allPlayCount), TrophyList.ALL_PLAY_COUNT_100PLUS);
         addTrophy(ownTrophies, getTrophies, isAllPlayCount1000plus(allPlayCount), TrophyList.ALL_PLAY_COUNT_1000PLUS);
-        addTrophy(ownTrophies, getTrophies, isAcvPoint10000plus(achievementPoint), TrophyList.ACV_POINT_10000PLUS);
-        addTrophy(ownTrophies, getTrophies, isAcvPoint100000plus(achievementPoint), TrophyList.ACV_POINT_100000PLUS);
-        addTrophy(ownTrophies, getTrophies, isAcvPoint1000000plus(achievementPoint), TrophyList.ACV_POINT_1000000PLUS);
+        addTrophy(ownTrophies, getTrophies, isAcvPoint10kPlus(achievementPoint), TrophyList.ACV_POINT_10kPLUS);
+        addTrophy(ownTrophies, getTrophies, isAcvPoint100kPlus(achievementPoint), TrophyList.ACV_POINT_100kPLUS);
+        addTrophy(ownTrophies, getTrophies, isAcvPoint1mPlus(achievementPoint), TrophyList.ACV_POINT_1mPLUS);
 
 
         return getTrophies;
@@ -86,25 +89,29 @@ public class TrophyGenerator {
 
     /**
      * 曲別のトロフィーを取得した場合、ハッシュ値を返す
-     * @param hash ハッシュ値
-     * @param judgeCount 判定数
-     * @param achievement 達成率
-     * @param playPart 演奏パート
+     * @param dataIO        ゲーム内でやり取りされるデータの入出力を行う
+     * @param hash          ハッシュ値
+     * @param judgeCount    判定数
+     * @param achievement   達成率
+     * @param playPart      演奏パート
      * @return ハッシュ値（文字列、取得していないなら""になる）
      */
     public String getTrophyOfMusic(
-            Map<Integer, Object> data,
+            GameDataIO dataIO,
             String hash,
             int[] judgeCount,
             float achievement,
             int playPart
     ) {
-        List<String> musicTrophies = cast.getStrListData(data, elem.MUSIC_TROPHY);
-        if(!musicTrophies.contains(hash) && isAllPartFCAndAcv90PerPlus(judgeCount, achievement, playPart) ) {
-            return hash;
-        } else {
-            return NONE;
-        }
+        // hashを返す条件（NONEを返さない条件）は
+        // 1. フルコンかつ達成率90%以上
+        // 2. 所持トロフィーに含まれていない
+        // 3. 楽曲別実績に載っている
+        boolean terms1 = isAllPartFCAndAcv90PerPlus(judgeCount, achievement, playPart);
+        boolean terms2 = !dataIO.getStrList(GameDataElements.MUSIC_TROPHY).contains(hash);
+        boolean terms3 = TrophyList.getMusicTrophy().containsKey(hash);
+
+        return terms1 && terms2 && terms3 ? hash : NONE;
     }
 
     public boolean isNONE(String str) {
@@ -182,23 +189,19 @@ public class TrophyGenerator {
     public boolean isAllPlayCount1000plus(int allPlayCount) {
         return allPlayCount >= 1000;
     }
-    public boolean isAcvPoint10000plus(int achievementPoint) {
-        return achievementPoint >= 10000;
+    public boolean isAcvPoint10kPlus(int achievementPoint) {
+        return achievementPoint >= 10_000;
     }
-    public boolean isAcvPoint100000plus(int achievementPoint) {
-        return achievementPoint >= 100000;
+    public boolean isAcvPoint100kPlus(int achievementPoint) {
+        return achievementPoint >= 100_000;
     }
-    public boolean isAcvPoint1000000plus(int achievementPoint) {
-        return achievementPoint >= 1000000;
+    public boolean isAcvPoint1mPlus(int achievementPoint) {
+        return achievementPoint >= 1_000_000;
     }
 
     // ------------------------------------------ //
 
     public final String NONE = "";
-
-    //
-    private final DataCaster cast = new DataCaster();
-    private final DataElements elem = new DataElements();
 
     // 判定状態
     private static final int JUDGE_PERFECT = 0;

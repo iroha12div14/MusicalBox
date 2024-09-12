@@ -28,11 +28,13 @@ import java.util.Objects;
  *     // 再生中の楽曲ファイルは中で保持しているので指定しなくてもOK
  */
 
-// 効果音の再生に用いるクラス
+/**
+ * 効果音の再生に用いるクラス
+ */
 public class SongPreviewManager {
     private Clip[] clips;
+    private final String dirPath; // ディレクトリの絶対パス
     private final String[] fileNames; // 拡張子を含まないファイル名の一覧
-    private final String dirSoundEffect;
 
     private boolean readyPreview = false;   // 再生準備の有無(多重再生の防止)
     private String playedPreviewFile = "";  // 再生中のファイル名(stopに用いる情報の保持)
@@ -40,13 +42,16 @@ public class SongPreviewManager {
     private float masterVolume = 1.0F;
     private static final float previewVolume = 0.5F; // プレビューの再生音量
 
-    // インスタンス
-    // 読み込み先のディレクトリ名と使うファイル名をここで格納
-    public SongPreviewManager(String directory, String[] fileNames) {
-        dirSoundEffect = directory;
+    /**
+     * インスタンス. 読み込み先のディレクトリ名と使うファイル名をここで格納
+     * @param dirPath 読み込み先ディレクトリの絶対パス（文字型）
+     * @param fileNames ファイル名の一覧（文字列配列）
+     */
+    public SongPreviewManager(String dirPath, String[] fileNames) {
+        this.dirPath = dirPath;
         this.fileNames = new String[fileNames.length];
         for(int f = 0; f < fileNames.length; f++) {
-            // 単純な置き換えだけどファイル名のド真ん中に".txt"が含まれてるのは多分無いでしょう 多分
+            // 単純な置き換えだけどファイル名のド真ん中に".txt"が含まれてる音声ファイルは多分無いでしょう 多分
             this.fileNames[f] = fileNames[f].replace(".txt", "");
         }
     }
@@ -59,7 +64,7 @@ public class SongPreviewManager {
         for(int f = 0; f < fileCount; f++) {
             String fileName = fileNames[f] + ".wav";
 
-            String address = "./" + dirSoundEffect + "/" + fileName;
+            String address = dirPath + "\\" + fileName;
             File file = new File(address);
             try {
                 AudioInputStream stream = AudioSystem.getAudioInputStream(file);
@@ -84,7 +89,10 @@ public class SongPreviewManager {
         }
     }
 
-    // 楽曲プレビューの再生
+    /**
+     * 楽曲プレビューの再生
+     * @param s 音源名（文字列）
+     */
     public void startPreview(String s) {
         int i = findFileName(s);
         if(i != -1) {
@@ -98,7 +106,10 @@ public class SongPreviewManager {
         }
         readyPreview = false;
     }
-    // 楽曲プレビューの停止
+
+    /**
+     * 楽曲プレビューの停止
+     */
     public void stopPreview() {
         int i = findFileName(playedPreviewFile);
         if(i != -1) {
@@ -124,10 +135,15 @@ public class SongPreviewManager {
         return -1;
     }
 
-    // プレビューの再生準備
+    /**
+     * プレビューの再生準備ができているか
+     */
     public boolean isReadyPreview() {
         return readyPreview;
     }
+    /**
+     * 多重再生防止トリガーを外す
+     */
     public void readyStartPreview() {
         readyPreview = true;
     }
@@ -140,12 +156,17 @@ public class SongPreviewManager {
         volumeControl.setValue(Math.min( (float) Math.log10(volume) * 20, maxVolume) ); // 音量制限
     }
 
-    // 主音量の調整
+    /**
+     * 主音量を調整する
+     * @param v ボリューム（浮動点小数）
+     */
     public void setMasterVolume(float v) {
         masterVolume = v;
     }
 
-    // クリップをクローズしてなんとやら
+    /**
+     * クリップをクローズする
+     */
     public void closeClips() {
         for(Clip clip : clips) {
             if(clip != null) {

@@ -1,17 +1,18 @@
 package scene;
 
+import data.GameDataIO;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Arrays;
-import java.util.Map;
 
 public class TemplateScene extends SceneBase {
 
     //コンストラクタ
-    public TemplateScene(Map<Integer, Object> data) {
+    public TemplateScene(GameDataIO dataIO) {
         // 画面サイズ、FPS、キーアサインの初期化
-        init(keyAssign, data);
+        init(keyAssign, dataIO);
     }
 
     // 描画したい内容はここ

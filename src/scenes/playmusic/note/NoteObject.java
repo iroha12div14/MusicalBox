@@ -20,6 +20,7 @@ package scenes.playmusic.note;
 // レコードクラスとして扱えるらしい　すげぇ
 
 /**
+ * 個々のノート情報を管理するレコードクラス
  * @param arriveTime   到達時刻(ミリ秒)
  * @param pitch        音程(0~31)
  * @param kind         種類(通常(O)、アルペジオ(A,P,N))

@@ -4,7 +4,7 @@ package scene.fps.time;
 public class ClockHandMilli extends ClockHand {
     @Override
     public int getTime() {
-        return time(Field.MILLI);
+        return time(Unit.MILLI);
     }
     @Override
     public int angleCalc() {

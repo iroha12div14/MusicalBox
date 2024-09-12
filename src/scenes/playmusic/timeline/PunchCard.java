@@ -1,13 +1,12 @@
 package scenes.playmusic.timeline;
 
-import scene.fps.FrameRateUtil;
-import scenes.playmusic.findstr.FindStrUtil;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-// パンチカードの使用文字
+/**
+ * パンチカードの使用文字をまとめたもの
+ */
 public class PunchCard {
     public static final String SPLIT_TOKEN = "#";
     public static final String PARAM_SPLIT_TOKEN = ",";
@@ -29,7 +28,7 @@ public class PunchCard {
 
     public static final String TIME = "T";
 
-    private final FindStrUtil fsu = new FindStrUtil();
+    private static final int UNDEFINED = -1;
 
     /*
      * collection: 収集・収蔵 ←こっちのスペリング
@@ -47,7 +46,11 @@ public class PunchCard {
         return Arrays.asList(SP, SO, SA, SN);
     }
 
-    // 文字情報からアルペジオ用の時刻補正に変換
+    /**
+     * 文字情報からアルペジオ用の時刻補正に変換
+     * @param str ノートの種類
+     * @return 時刻補正の向き（負なら早い、正なら遅い）
+     */
     public int StringToArpeggio(String str) {
         return switch (str) {
             case MP, SP -> -1;
@@ -55,13 +58,20 @@ public class PunchCard {
             default -> 0;
         };
     }
+
+    /**
+     * アルペジオノーツの結線先の音階
+     * @param str   結線元ノートの種類（PかA）
+     * @param note  その時刻におけるノーツ
+     * @return 結線先ノートの音階
+     */
     public int arpTo(String str, Map<String, Integer> note){
         return switch (str) {
             case MP -> note.get(MA);
             case MA -> note.get(MN);
             case SP -> note.get(SA);
             case SA -> note.get(SN);
-            default -> FindStrUtil.UNDEFINED;
+            default -> UNDEFINED;
         };
     }
 }

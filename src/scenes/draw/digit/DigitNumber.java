@@ -8,12 +8,22 @@ import java.awt.*;
 import java.util.Map;
 import java.util.HashMap;
 
-// セグメントナンバーの描画
+/**
+ * セグメントナンバーの描画
+ */
 public class DigitNumber {
     // 台形描画用のクラス
     private final DrawTrapezoid dtz = new DrawTrapezoid();
 
-    // セグメントの描画 size=100 が基準値
+    /**
+     * セグメントの描画 size=100 が基準値
+     * @param number        表示する数値
+     * @param size          大きさ
+     * @param posX          X座標
+     * @param posY          Y座標
+     * @param segColorON    セグメント点灯時の色
+     * @param segColorOFF   セグメント消灯時の色
+     */
     public void drawSegment(Graphics2D g2d, int number, int size, int posX, int posY, Color segColorON, Color segColorOFF) {
         Map<segPosition, Boolean> segState = updateSegment(number);
         for(segPosition seg : segPosition.values()){

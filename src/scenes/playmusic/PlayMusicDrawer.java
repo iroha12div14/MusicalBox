@@ -86,8 +86,8 @@ public class PlayMusicDrawer extends SceneDrawer {
     private final Color colorJudgeLine     = judgeLine.getColor();
     private final Color colorAutoPlay      = backGray;
 
-    private final Color colorCombo = new Color(255, 255, 255, 100);
-    private final Color colorAchievement = new Color(255, 255, 255, 100);
+    private final Color colorCombo       = judge.getComboColor();
+    private final Color colorAchievement = judge.getAchievementColor();
 
     // フォント定義
     private final Font fontMusicTitle = font.Meiryo(20, font.BOLD);

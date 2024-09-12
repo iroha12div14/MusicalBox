@@ -1,9 +1,10 @@
 package scenes.playmusic.timeline;
 
-import scenes.playmusic.findstr.FindStrUtil;
-
 import java.util.*;
 
+/**
+ * シーケンス情報を解析し、楽譜の密度などを算出する
+ */
 public class SequenceAnalyzer {
     private final PunchCard pc = new PunchCard();
     private final List<String> co  = pc.collection();
@@ -15,7 +16,16 @@ public class SequenceAnalyzer {
     private final int SUB_PART  = 2;
     private final int BOTH_PART = 3;
 
-    // 色々解析
+    private static final int UNDEFINED = -1;
+
+    /**
+     * 平均密度と瞬間密度を算出する
+     * @param sequence          シーケンス
+     * @param sequenceUnitTime  シーケンスの時間単位
+     * @param arpDistanceTime   アルペジオノーツの間隔
+     * @param playPart          演奏パート（数値）
+     * @return float型配列。[0]が平均密度、[1]が瞬間密度。
+     */
     public float[] analyzeSequence(List<Map<String, Integer>> sequence, float sequenceUnitTime, int arpDistanceTime, int playPart) {
         List<Map<String, Integer>> seq = new ArrayList<>(sequence);
         float playTime = getPlayTime(seq, sequenceUnitTime);
@@ -42,13 +52,19 @@ public class SequenceAnalyzer {
         int count = 0; // notes
         for(Map<String, Integer> notes : sequence) {
             for(String s : col) {
-                if(notes.get(s) != FindStrUtil.UNDEFINED) {
+                if(notes.get(s) != UNDEFINED) {
                     count++;
                 }
             }
         }
         return count;
     }
+    /**
+     * ノート数を数える
+     * @param sequence  シーケンス
+     * @param playPart  数える演奏パート
+     * @return ノート数
+     */
     public int getNotesCount(List<Map<String, Integer>> sequence, int playPart) {
         return switch (playPart) {
             case MAIN_PART -> getNotesCount(sequence, com);
@@ -76,7 +92,7 @@ public class SequenceAnalyzer {
                 int seqTime = (int) (notes.get(PunchCard.TIME) * sequenceUnitTime);
                 if(time == seqTime) {
                     for(String s : col ) {
-                        if(notes.get(s) != FindStrUtil.UNDEFINED) {
+                        if(notes.get(s) != UNDEFINED) {
                             int lifetime = getLifetime(arpDistanceTime, s);
                             notesLifetime.add(lifetime);
                         }
@@ -123,7 +139,12 @@ public class SequenceAnalyzer {
         return lifetime;
     }
 
-    // 演奏時間を算出
+    /**
+     * 演奏時間を算出する
+     * @param sequence          シーケンス
+     * @param sequenceUnitTime  シーケンスの時間単位
+     * @return 演奏時間
+     */
     public float getPlayTime(List<Map<String, Integer>> sequence, float sequenceUnitTime) {
         int sequenceSize = sequence.size();
         return sequence.get(sequenceSize - 1).get(PunchCard.TIME) * sequenceUnitTime;

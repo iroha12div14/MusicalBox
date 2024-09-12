@@ -8,17 +8,26 @@ import scenes.font.FontUtil;
 
 import java.awt.*;
 
+/**
+ * 文字列配列の一覧を並べ、選択された項目を示すセレクタを作成する
+ */
 public class DrawSelector {
     FontUtil font = new FontUtil();
     DrawPolygon rect = new DrawRect();
-    DrawTrapezoid tz = new DrawTrapezoid();
 
     Blueprint frame, inner;
     Blueprint selector;
 
     private final Color frameColor = new Color(250, 150, 0);
 
-    // 項目内のセレクタ（横）
+    /**
+     * 横並びのセレクタを描画する
+     * @param strArray  選択できる項目の一覧（文字列配列）
+     * @param pointer   選択されている項目
+     * @param x         X座標
+     * @param y         Y座標
+     * @param f         文字のフォント
+     */
     public void drawSelector(Graphics2D g2d, String[] strArray, int pointer, int x, int y, Font f) {
         int i = 0;
         int height = font.strHeight(g2d, f);
@@ -44,7 +53,15 @@ public class DrawSelector {
         }
     }
 
-    // 項目のセレクタ（縦）
+    /**
+     * 縦並びのセレクタを描画する
+     * @param strArray  選択できる項目の一覧（文字列配列）
+     * @param cursor    選択されている項目
+     * @param x         X座標
+     * @param y         Y座標
+     * @param f         文字のフォント
+     * @param paddingY  項目同士でどれだけ間隔を空けるか
+     */
     public void drawVerticalSelector(Graphics2D g2d, String[] strArray, int cursor, int x, int y, Font f, int paddingY) {
         int cursorY = y + paddingY * cursor;
 

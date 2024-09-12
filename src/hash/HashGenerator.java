@@ -4,13 +4,15 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 // 参照元：https://qiita.com/yasushi-jp/items/ac8c7ead98794aed9905
 
+/**
+ * ハッシュ値を生成する。
+ */
 public class HashGenerator {
     // 各種アルゴリズム
     public static final String MD2     = "MD2";
@@ -20,13 +22,12 @@ public class HashGenerator {
     public static final String SHA_512 = "SHA-512";
 
     /**
-     * ファイルのハッシュ値（文字列）を返す
-     * @param filePath ファイルパス
+     * ファイルのハッシュ値（文字列）を返す. （ファイルパスはルート込み）
+     * @param filePath ファイルの絶対パス（Path型）
      * @param algorithmName アルゴリズム
      * @return ハッシュ値(文字列)
      */
-    public static String getFileHash(String filePath, String algorithmName) {
-        Path path = Paths.get(filePath);
+    public static String getFileHash(Path filePath, String algorithmName) {
         byte[] hash;
 
         // アルゴリズムを取得
@@ -40,7 +41,7 @@ public class HashGenerator {
 
         try (
                 DigestInputStream dis = new DigestInputStream(
-                        new BufferedInputStream(Files.newInputStream(path) ), md)
+                        new BufferedInputStream(Files.newInputStream(filePath) ), md)
         ) {
             // ファイルの読み込み（読み込んだ中身をどうのこうのはしない）
             while(dis.read() != -1) { }
@@ -64,12 +65,10 @@ public class HashGenerator {
     // パンチカードのSHA-256だけ欲しい時はこれ
     /**
      * ファイルのSHA256を返す
-     * @param directory ディレクトリ
-     * @param fileName ファイル名
+     * @param filePath ファイルの絶対パス（Path型）
      * @return SHA256（文字列）
      */
-    public static String getSha256(String directory, String fileName) {
-        String filePath = "./" + directory + "/" + fileName;
+    public static String getSha256(Path filePath) {
         return getFileHash(filePath, SHA_256);
     }
 }

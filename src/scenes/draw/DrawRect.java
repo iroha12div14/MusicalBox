@@ -3,7 +3,9 @@ package scenes.draw;
 import java.awt.*;
 import java.util.Map;
 
-// 長方形
+/**
+ * 長方形の描画
+ */
 public class DrawRect extends DrawPolygon {
     @Override
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param) {

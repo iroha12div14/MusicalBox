@@ -17,18 +17,23 @@ import java.util.Objects;
  * wfm.startSound(SE_KNOCK);
  */
 
-// 効果音の再生に用いるクラス
+/**
+ * 効果音の再生に用いるクラス
+ */
 public class SoundEffectManager {
     private Clip[] clips;
-    private final String[] fileNames;
-    private final String dirSoundEffect;
+    private final String[] fileNames; // ファイル名の一覧
+    private final String dirPath; // ディレクトリの絶対パス
 
     private float masterVolume = 1.0F;
 
-    // インスタンス
-    // 読み込み先のディレクトリ名と使うファイル名をここで格納
-    public SoundEffectManager(String directory, String[] fileNames) {
-        dirSoundEffect = directory;
+    /**
+     * インスタンス. 読み込み先のディレクトリ名と使うファイル名をここで格納
+     * @param dirPath ディレクトリの絶対パス（文字列）
+     * @param fileNames ファイル名の一覧（文字列配列）
+     */
+    public SoundEffectManager(String dirPath, String[] fileNames) {
+        this.dirPath = dirPath;
         this.fileNames = fileNames;
     }
 
@@ -38,7 +43,7 @@ public class SoundEffectManager {
         int fileCount = fileNames.length;
 
         for(int f = 0; f < fileCount; f++) {
-            String address = "./" + dirSoundEffect + "/" + fileNames[f];
+            String address = dirPath + "\\" + fileNames[f];
             File file = new File(address);
             try {
                 AudioInputStream stream = AudioSystem.getAudioInputStream(file);
@@ -63,7 +68,10 @@ public class SoundEffectManager {
         }
     }
 
-    // 音声の再生
+    /**
+     * 音声の再生
+     * @param s 音源名（文字列）
+     */
     public void startSound(String s) {
         int i = findFileName(s);
         if(i != -1) {
@@ -96,7 +104,10 @@ public class SoundEffectManager {
         volumeControl.setValue(Math.min( (float) Math.log10(volume) * 20, maxVolume) ); // 音量制限
     }
 
-    // 主音量の調整
+    /**
+     * 主音量を調整する
+     * @param v ボリューム（浮動点小数）
+     */
     public void setMasterVolume(float v) {
         masterVolume = v;
     }

@@ -1,7 +1,7 @@
 package scene;
 
-import data.DataCaster;
-import data.DataElements;
+import data.GameDataElements;
+import data.GameDataIO;
 import scene.key.KeyController;
 import scene.fps.FrameRateUtil;
 
@@ -9,10 +9,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * 場面表示のベース機能となるクラス。
+ * <br/>
+ * paintFieldメソッドは描画を、actionFieldメソッドは定期的に実行する処理を記述する。
+ */
 public abstract class SceneBase extends JPanel implements ActionListener {
     @Override
     public void paintComponent(Graphics g){
@@ -35,26 +38,35 @@ public abstract class SceneBase extends JPanel implements ActionListener {
         }
     }
 
-    // 描画用メソッド
+    /**
+     * 描画用メソッド
+     */
     protected abstract void paintField(Graphics2D g2d);
-    // 処理用メソッド
+
+    /**
+     * 処理用メソッド
+     */
     protected abstract void actionField();
 
-    // 初期化
-    protected void init(List<Integer> keyAssign, Map<Integer, Object> data) {
+    /**
+     * 初期化
+     * @param keyAssign その場面で使用するキーの一覧（リスト型）
+     * @param dataIO    ゲーム内でやり取りされるデータの入出力を行う
+     */
+    protected void init(List<Integer> keyAssign, GameDataIO dataIO) {
         // クラス内で用いるデータの移動
-        this.data = new HashMap<>(data);
+        data = dataIO;
 
-        int nextSceneId = cast.getIntData(this.data, elem.SCENE_ID) + 1;
-        this.data.put(elem.SCENE_ID, nextSceneId);
+        int nextSceneId = data.get(GameDataElements.SCENE_ID, Integer.class) + 1;
+        data.put(GameDataElements.SCENE_ID, nextSceneId);
 
         // FrameRateUtilを定義
-        int frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
-        fru = new FrameRateUtil(frameRate, 0);
+        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
+        fru = new FrameRateUtil(frameRate);
 
         // 画面サイズの指定
-        int displayWidth  = cast.getIntData(this.data, elem.DISPLAY_WIDTH);
-        int displayHeight = cast.getIntData(this.data, elem.DISPLAY_HEIGHT);
+        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
+        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
         setPreferredSize(new Dimension(displayWidth, displayHeight) );
 
         // キーリスナの登録
@@ -74,12 +86,15 @@ public abstract class SceneBase extends JPanel implements ActionListener {
         isActive = false;
     }
 
-    // シーン転換
+    /**
+     * シーン転換
+     * @param scene 転換先の場面
+     */
     protected void sceneTransition(Scene scene) {
         // 同フレーム内で誤って2回呼ぶとバグることが判明したのでセーフティネット敷いてる
         if( !isCalledScene ) {
             isCalledScene = true;
-            SceneManager sceneManager = cast.getSceneManager(data);
+            SceneManager sceneManager = data.get(GameDataElements.SCENE_MANAGER, SceneManager.class);
             sceneManager.sceneTransition(scene, data, this);
         }
     }
@@ -91,18 +106,20 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     private Timer timer;
 
     // データの受け渡し用
-    protected Map<Integer, Object> data;
-    protected final DataElements elem = new DataElements();
-    protected final DataCaster cast = new DataCaster();
+    protected GameDataIO data;
 
     private boolean isActive;
     private boolean isCalledScene = false; // シーンを誤って2回呼ばない為のセーフティネット
 
     // ------------------------------------------------------ //
 
-    // デバッグ用 インスタンスの稼働状態の確認
+    /**
+     * デバッグ用 インスタンスの稼働状態の確認
+     * @param msg コンソールに表示する文字列
+     * @param tab Tabインデントの数
+     */
     protected void printMessage(String msg, int tab) {
-        int id = cast.getIntData(data, elem.SCENE_ID);
+        int id = data.get(GameDataElements.SCENE_ID, Integer.class);
         String t = "\t".repeat(tab);
         String[] fullName = this.getClass().getName().split("\\.");
         String name = fullName[fullName.length-1];

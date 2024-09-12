@@ -32,8 +32,9 @@ import javax.sound.sampled.Clip;
  *
  */
 
-// 読み込んだ音源データを格納するクラス
-
+/**
+ * 読み込んだ音源データを格納するクラス
+ */
 public class KeySoundContainer {
     // 音声データの音程名
     private final String[] pitchesName = {
@@ -46,6 +47,7 @@ public class KeySoundContainer {
     };
     // 手動演奏用のカウンタの上限
     private final int manualPlayCounterCycle = 12;
+    private final String fileHeader = "org127";
 
     // 音源の格納先
     private final Clip[][] clips;
@@ -72,7 +74,11 @@ public class KeySoundContainer {
         }
     }
 
-    // クリップの格納
+    /**
+     * クリップの格納
+     * @param p     音階番号
+     * @param clip  クリップ
+     */
     public void setClip(int p, Clip[] clip) {
         clips[p] = clip;
     }
@@ -89,7 +95,11 @@ public class KeySoundContainer {
     public String getPitchesName(int p) {
         return pitchesName[p];
     }
-    // クリップの各音程の枠数
+    // 音源名のヘッダの取得
+    public String getFileHeader() {
+        return fileHeader;
+    }
+    // クリップの各音程の枠数（自動再生分）
     public int[] getClipLength() {
         int[] len = new int[getPitchCount()];
         for(int p = 0; p < getPitchCount(); p++) {
@@ -103,19 +113,31 @@ public class KeySoundContainer {
         return manualPlayCounterCycle;
     }
 
-    // 手動演奏用のクリップを取得
+    /**
+     * 手動演奏用のクリップを取得
+     * @param p 音階番号
+     */
     public Clip getManualPlayClip(int p) {
         int manualPlayCounter = getManualPlayCounter(p);
         updateManualPlayCounter(p);
         return getClip(p, manualPlayCounter);
     }
-    // 自動再生用のクリップを取得
+
+    /**
+     * 自動再生用のクリップを取得
+     * @param p 音階番号
+     */
     public Clip getAutoPlayClip(int p) {
         int autoPlayCounter = getAutoPlayCounter(p);
         updateAutoPlayCounter(p);
         return getClip(p, autoPlayCounter);
     }
-    // クリップを取得
+
+    /**
+     * 再生するクリップを取得
+     * @param p         音階番号
+     * @param counter   その音階のカウンタ
+     */
     private Clip getClip(int p, int counter) {
         Clip[] clip = clips[p];
         return clip[counter];
@@ -141,7 +163,9 @@ public class KeySoundContainer {
         autoPlayCounter[p]++;
     }
 
-    // クリップが抱えているリソースを開放
+    /**
+     * クリップが抱えているリソースを開放
+     */
     public void closeClips(){
         for(Clip[] clip : clips) {
             for(Clip c : clip) {

@@ -1,51 +1,49 @@
 package save;
 
-import data.DataCaster;
-import data.DataElements;
+import data.GameDataElements;
+import data.GameDataIO;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
 
+/**
+ * セーブファイルの作成・適用をする。
+ */
 public class SaveFileManager {
 
     /**
      * セーブファイルを適用する
-     * @param data data
+     * @param dataIO ゲーム内でやり取りされるデータの入出力を行う
      */
-    public Map<Integer, Object> applySaveFile(Map<Integer, Object> data) {
+    public GameDataIO applySaveFile(GameDataIO dataIO) {
         SaveDataManager manager = new SaveDataManager();
-        DataCaster cast = new DataCaster();
-        DataElements elem = new DataElements();
 
-        String saveDirectory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
-        File saveDir = new File(saveDirectory);
-        String saveFile = cast.getStrData(data, elem.FILE_SAVE_DATA);
-        Path filePath = Paths.get("./" + saveDirectory, saveFile);
-        if(saveDir.exists() && Files.exists(filePath) ) {
+        String dirPathStr = dataIO.getDirectoryPathStr(GameDataElements.DIR_SAVE_DATA);
+        File saveDir = new File(dirPathStr);
+        Path filePathPath = dataIO.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
+        String filePathStr = dataIO.getFilePathStr(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
+
+        if(saveDir.exists() && Files.exists(filePathPath) ) {
             printMessage("セーブデータをロード中",2);
-            return manager.applySaveData(data, saveDirectory, saveFile);
-        } else {
-            return data;
+            return manager.applySaveData(dataIO, filePathStr);
+        }
+        else {
+            return dataIO;
         }
     }
 
     /**
      * セーブファイルを作成する
-     * @param data data
+     * @param dataIO ゲーム内でやり取りされるデータの入出力を行う
      */
-    public void makeSaveFile(Map<Integer, Object> data) {
+    public void makeSaveFile(GameDataIO dataIO) {
         SaveDataManager manager = new SaveDataManager();
-        DataCaster cast = new DataCaster();
-        DataElements elem = new DataElements();
 
-        String saveDirectory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
-        File saveDir = new File(saveDirectory);
-        String saveFile = cast.getStrData(data, elem.FILE_SAVE_DATA);
-        Path filePath = Paths.get("./" + saveDirectory, saveFile);
+        String dirPathStr = dataIO.getDirectoryPathStr(GameDataElements.DIR_SAVE_DATA);
+        File saveDir = new File(dirPathStr);
+        Path filePath = dataIO.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
         try {
             // セーブファイルのディレクトリが無いなら作る
             if(!saveDir.exists() ) {
@@ -54,7 +52,7 @@ public class SaveFileManager {
 
             if( !Files.exists(filePath) ) {
                 Files.createFile(filePath); // ファイルを作成
-                manager.makeSaveData(data, saveDirectory, saveFile); // ファイルを編集
+                manager.makeSaveData(dataIO, filePath); // ファイルを編集
                 printMessage("セーブファイルを新規作成", 2);
             }
         } catch (IOException e) {

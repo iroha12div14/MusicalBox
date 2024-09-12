@@ -4,17 +4,31 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-// 直線
-// Graphics -> Graphics2Dのキャストで
-// 何故か上下が逆に出力されるようになってしまった
-// ので修正
+/**
+ * 直線の描画。
+ * <br/>
+ * Graphics -> Graphics2Dのキャストで、
+ * 何故か上下が逆に出力されるようになってしまった……
+ * ので修正済。
+ * <br/>
+ * 描画パラメータの大半はBlueprintクラスに移譲したが、直線の設計図は用意していないため、ここだけ残っている。
+  */
 public class DrawLine implements Draw {
-    // ある点から長さと角度で線を引く
+    /**
+     * ある点から長さと角度で線を引く
+     * @param c     色
+     * @param param 描画パラメータ
+     */
     public void drawLA(Graphics2D g2d, Color c, Map<Param, Integer> param){
         Map<Param, Integer> p = cartesianFixParam(param);
         draw(g2d, c, p);
     }
-    // 曲座標変換
+
+    /**
+     * 曲座標変換
+     * @param param パラメータ
+     * @return 変換後のパラメータ
+     */
     private Map<Param, Integer> cartesianFixParam(Map<Param, Integer> param){
         double radians = Math.toRadians(param.get(A));
         int px = param.get(X) + (int) (param.get(L) * Math.cos(radians));
@@ -27,17 +41,21 @@ public class DrawLine implements Draw {
         return p;
     }
 
-    // 線
+    /**
+     * 線の描画
+     * @param c     色
+     * @param param 描画パラメータ
+     */
     @Override
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param) {
         g2d.setColor(c);
         g2d.drawLine(param.get(X), param.get(Y), param.get(X2), param.get(Y2));
     }
-    // fillは使わない 中身なし
+    /**
+     * fillは使わない 中身なし
+     */
     @Override
-    public void fill(Graphics2D g2d, Color c, Map<Param, Integer> param) {
-
-    }
+    public void fill(Graphics2D g2d, Color c, Map<Param, Integer> param) { }
 
     // 描画用パラメータの作成の補助メソッド
     public Map<Param, Integer> makeParam(int x, int y, int x2, int y2) {

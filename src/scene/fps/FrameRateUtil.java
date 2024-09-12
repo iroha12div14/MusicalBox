@@ -3,11 +3,14 @@ package scene.fps;
 import scene.fps.time.ClockHandMilli;
 import calc.CalcUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
 import javax.swing.*;
 
-// FPSの測定と調整
+/**
+ *  FPSの測定と調整
+ */
 public class FrameRateUtil {
     //----------- インスのタンス -------------------------------------------//
     // ミリ秒取得
@@ -16,20 +19,24 @@ public class FrameRateUtil {
     private final CalcUtil calc = new CalcUtil();
 
     //----------- 使うやつ -------------------------------------------//
-    // ディレイを設定してタイマーを始動
+
+    /**
+     * タイマーのディレイ値を調整し、場面のFPSを調整する。
+     * @param timer Timer型のインスタンス。
+     */
     public void setDelayAndStartTimer(Timer timer) {
         updatePerFrame();
-        int nextDelay = getNextDelay();
-        timer.setDelay(nextDelay);
+        timer.setDelay(delay);
         timer.start();
     }
-    // コンストラクタ
-    public FrameRateUtil(int targetFPS, int updateDelaysPerSecond) {
+
+    /**
+     * コンストラクタ
+     * @param targetFPS 目標FPS
+     */
+    public FrameRateUtil(int targetFPS) {
         // 目標FPS、delaysの枠数
         this.targetFPS = targetFPS;
-        this.delaysSize = (updateDelaysPerSecond > 0 && updateDelaysPerSecond < targetFPS)
-                ? calc.div(targetFPS, updateDelaysPerSecond)
-                : 1;
 
         lapTime = -1;
         prevMilli = -1;
@@ -38,9 +45,8 @@ public class FrameRateUtil {
 
         timePaddingMicro = 0;
 
-        // 処理時間が不明なので0とおいてディレイリストを作成
-        delays = makeDelays(0);
-        updateDelaysSignal = true;
+        // 処理時間が不明なので0とおいてディレイを設定
+        delay = makeDelays(0);
 
         // FPS計測用
         pastMilliLogSize = (int) (targetFPS * LogSecond);
@@ -48,7 +54,10 @@ public class FrameRateUtil {
         isPause = false; // 一時停止
     }
 
-    // 一時停止を設定
+    /**
+     * 一時停止を設定
+     * @param set 停止の有無
+     */
     public void setPause(boolean set) {
         isPause = set;
     }
@@ -69,7 +78,7 @@ public class FrameRateUtil {
         prevMilli = nowMilli; // lapTime取得できたので更新
 
         pastMilliLog.add(lapTime);
-        if(pastMilliLog.size() > pastMilliLogSize ) {
+        if(pastMilliLog.size() > pastMilliLogSize) {
             pastMilliLog.remove(0);
         }
 
@@ -78,53 +87,36 @@ public class FrameRateUtil {
             pastTime += lapTime;
         }
 
-        // ディレイリストが空になったら補充
-        if(delays.isEmpty() ) {
-            int logicPastTime = 1000 * pastFrame / targetFPS;
-            int fix = pastTime - logicPastTime; // 遅延時間
-            delays = makeDelays(fix);
+        // ディレイを設定
+        int logicPastTime = 1000 * pastFrame / targetFPS;   // 理論経過時間
+        int fix = pastTime - logicPastTime;                 // 遅延時間
+        delay = makeDelays(fix);
+    }
 
-            // リスト補充時にシグナルを出す
-            updateDelaysSignal = true;
-        } else {
-            updateDelaysSignal = false;
-        }
-    }
-    // ディレイ時間の取得　ただし取得した時点で元データから消滅するので注意
-    private int getNextDelay(){
-        int delay = delays.get(0);
-        delays.remove(0);
-        return delay;
-    }
-    // ディレイリストの生成
-    private List<Integer> makeDelays(int fix) {
-        // 基準時間
-        int logicPastTimeMicro = calc.div(1000000 * delaysSize, targetFPS);
+    // ディレイ値の算出
+    private int makeDelays(int fix) {
+        // 基準時間[マイクロ秒]
+        int logicTimePerFrameMicro = calc.div(1000000, targetFPS);
+
         // 処理時間を考慮して次にディレイとして確保する時間
-        // 何故かdelaysCount分だけ引くと丁度良くなる(なんで？)
-        int delaySumMicro = logicPastTimeMicro + timePaddingMicro - (fix + delaysSize) * 1000;
+        // 何故かこの式だと丁度良くなる(なんで？)
+        int delaySumMicro = logicTimePerFrameMicro + timePaddingMicro - (fix + 1) * 1000;
 
-        // ディレイ値をいい感じに格納してくれる……はず
-        List<Integer> delays = new LinkedList<>();
-        int slot = delaysSize;
-        for(; slot > 0; slot--) {
-            int delay = calc.div(delaySumMicro, slot * 1000);
-            delays.add( Math.max(delay, 0) );
-            delaySumMicro -= delay * 1000;
-        }
+        // ディレイ値を設定（0以上の値）
+        int d = calc.div(delaySumMicro, 1000);
+        delay = Math.max(d, 0);
+
         // ディレイで埋めきれない端数は次回に持ち越し
-        timePaddingMicro = delaySumMicro;
-        return delays;
+        timePaddingMicro = delaySumMicro - d * 1000;
+        return delay;
     }
 
     //----------- フィールド -------------------------------------------//
     // 目標FPS
     private final int targetFPS;
 
-    // ディレイ値のリスト、リストの枠数、リストの生成時シグナル
-    private List<Integer> delays = new LinkedList<>();
-    private final int delaysSize;
-    private boolean updateDelaysSignal;
+    // ディレイ値
+    private int delay;
 
     // 1フレームで経過した時間、1フレーム前のミリ秒時刻、経過した合計時間、経過したフレーム時刻
     private int lapTime;
@@ -136,7 +128,7 @@ public class FrameRateUtil {
     private int timePaddingMicro;
 
     // 近傍n秒間の経過ミリ秒の履歴、履歴の記録秒数、履歴の記録枠数
-    private final List<Integer> pastMilliLog = new LinkedList<>();
+    private final List<Integer> pastMilliLog = new ArrayList<>();
     private final float LogSecond = 1.5F;
     private final int pastMilliLogSize;
 
@@ -157,6 +149,12 @@ public class FrameRateUtil {
         float fps = calc.div(1000 * getPastFrame(), getPastTime(), 1);
         return "FPS:" + fps + "(Ave)";
     }
+
+    /**
+     * FPSを表示する。
+     * @param secondView FPSの更新間隔の表示の有無
+     * @return FPSの表示（文字列）
+     */
     public String msgFPS(boolean secondView) {
         int logSum = (pastMilliLog.size() == pastMilliLogSize)
                 ? pastMilliLog.stream()
@@ -172,6 +170,12 @@ public class FrameRateUtil {
         int logicPastTime = calc.div(1000 * getPastFrame(), targetFPS);
         return "LogicTime:" + logicPastTime + "[ms]";
     }
+
+    /**
+     * 遅延時間を表示する。
+     * @param viewLimitMilli 表示の上限時間[ms]。0にすると上限なし。
+     * @return 自演時間の表示（文字列）
+     */
     public String msgLatency(int viewLimitMilli) {
         int logicPastTime = calc.div(1000 * getPastFrame(), targetFPS);
         int latency = getPastTime() - logicPastTime;
@@ -185,22 +189,10 @@ public class FrameRateUtil {
     public String msgPastMilliLog() {
         return "PastLog:" + pastMilliLog;
     }
-    public String msgDelays() {
-        return "Delays:" + delays;
-    }
-    public String msgDelaySum() {
-        int delaySum = (isUpdateDelaysSignal() )
-                ? delays.stream()
-                    .mapToInt(Integer::intValue)
-                    .sum()
-                : -1;
-        return "DelaySum:" + delaySum + "[ms]";
+    public String msgDelay() {
+        return "Delay:" + delay + "[ms]";
     }
     public String msgPaddingMicro() {
         return "Padding:" + timePaddingMicro + "[micro sec]";
-    }
-    // delays更新時にシグナルを出すやつ
-    public boolean isUpdateDelaysSignal() {
-        return updateDelaysSignal;
     }
 }

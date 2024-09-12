@@ -5,46 +5,59 @@ import scenes.playmusic.timeline.PunchCard;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * ヘッダ情報の作成
+ */
 public class HeaderMaker {
-    // ヘッダの分解と格納
+    /**
+     * パンチカードからヘッダを抽出する
+     * @param punchCard パンチカード（文字型リスト）
+     * @return ヘッダ（Map）
+     */
     public Map<String, Object> makeHeader(List<String> punchCard) {
-        // 読み取りモード falseでヘッダ部分、trueでパンチカード本体読み取り
-        boolean readSequenceMode = false;
-
         // ヘッダ情報（タイトルやテンポ）を投げ込むためのやつ
         Map<String, Object> header = new HashMap<>();
 
         // 1行ずつ構文解析してデータ処理
-        for( String line : punchCard ){
-            // "#"を境に左が変数名、右がパラメータ
-            String hd    = line.split(PunchCard.SPLIT_TOKEN)[0];
-            String param = line.split(PunchCard.SPLIT_TOKEN)[1];
+        for(String line : punchCard) {
 
-            // ヘッダ部分の読み取り 曲名とかテンポとか
-            if( !readSequenceMode ){
-                if( Objects.equals(hd, PunchCard.TITLE) ){
-                    header.put(hd, param);
-                }
-                else if( Objects.equals(hd, PunchCard.TEMPO) ){
-                    int intParam = Integer.parseInt(param);
-                    header.put(hd, intParam);
-                }
-                else if( Objects.equals(hd, PunchCard.LEVEL) ){
+            // 区切りトークン"#"を含まない場合は無視
+            if(line.contains(PunchCard.SPLIT_TOKEN) ) {
+                String param = line.split(PunchCard.SPLIT_TOKEN)[1]; // "#"を境に右がパラメータ
 
-                    String[] p = param.split(PunchCard.PARAM_SPLIT_TOKEN);
-                    int[] intParam = {Integer.parseInt(p[0]), Integer.parseInt(p[1])};
-                    header.put(hd, intParam);
+                if (line.startsWith(PunchCard.TITLE) ) {
+                    header.put(PunchCard.TITLE, param);
                 }
-                else if( Objects.equals(hd, PunchCard.SEQUENCE) ){
-                    readSequenceMode = true;
+                else if (line.startsWith(PunchCard.TEMPO) ) {
+                    header.put(PunchCard.TEMPO, getInt(param) );
                 }
-            }
-            else {
-                break;
+                else if (line.startsWith(PunchCard.LEVEL) ) {
+                    header.put(PunchCard.LEVEL, getIntArr(param) );
+                }
+                else if (line.startsWith(PunchCard.SEQUENCE) ) {
+                    break; // SEQUENCE行に差し掛かったら終了
+                }
             }
         }
         return header;
+    }
+
+    // パラメータparamの型変換
+    private int getInt(String param) {
+        return Integer.parseInt(param);
+    }
+    private String[] getStrArr(String param) {
+        return param.split(PunchCard.PARAM_SPLIT_TOKEN);
+    }
+    private int[] getIntArr(String param) {
+        String[] strArrParam = getStrArr(param);
+        int[] intArrParam = new int[strArrParam.length];
+        int i = 0;
+        for(String str : strArrParam) {
+            intArrParam[i] = Integer.parseInt(str);
+            i++;
+        }
+        return intArrParam;
     }
 }

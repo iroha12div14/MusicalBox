@@ -2,7 +2,9 @@ package scenes.playmusic.parts;
 
 import java.awt.*;
 
-// ノートの定義
+/**
+ * ノートの大きさや色などの定義
+ */
 public class PartsNote {
     // レーン幅の情報が必要なのでとりあえずインスタンスを用意する
     private final PartsLane lane = new PartsLane();

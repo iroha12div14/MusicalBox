@@ -4,8 +4,10 @@ import scenes.playmusic.timeline.PunchCard;
 
 import java.util.Map;
 
+/**
+ * ヘッダ情報（タイトル・テンポ・レベル）の取得
+ */
 public class HeaderGetter {
-    // ヘッダ情報（タイトル・テンポ・レベル）の取得
     public static String getTitle(Map<String, Object> header){
         return (String) header.get(PunchCard.TITLE);
     }

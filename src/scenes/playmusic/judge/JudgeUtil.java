@@ -10,7 +10,9 @@ import scenes.playmusic.keysound.KeySoundPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
-// 判定の処理と定義
+/**
+ * 判定の処理と定義
+ */
 public class JudgeUtil {
     // インスタンスあれこれ
     private final PartsKeyboard keyboard;
@@ -55,12 +57,13 @@ public class JudgeUtil {
 
     // -------------------------------------------------------- //
 
-    // コンストラクタ
-    public JudgeUtil(
-            KeySoundContainer container,    // 音源コンテナ
-            PlayMusicDrawer drawer,         // 描画インスタンス
-            PartsKeyboard keyboard          // キーボード
-    ) {
+    /**
+     * コンストラクタ
+     * @param container 音源コンテナ
+     * @param drawer    描画インスタンス
+     * @param keyboard  キーボード
+     */
+    public JudgeUtil(KeySoundContainer container, PlayMusicDrawer drawer, PartsKeyboard keyboard) {
         player = new KeySoundPlayer(container);
         this.drawer = drawer;
         this.keyboard = keyboard;
@@ -71,14 +74,18 @@ public class JudgeUtil {
         judgeState = 3; // OOPS判定を仮で入れている
     }
 
-    // キーを押した時点の、ノートが判定線に到達するまでの残り時間から、判定を行う
+    /**
+     * キーを押した時点の、ノートが判定線に到達するまでの残り時間から、判定を行う
+     * @param score         楽譜
+     * @param remainTime    到達残り時間
+     * @param pitch         音程
+     * @param scoreKind     楽譜のパート種別
+     * @param autoPlayPart  そのパートが自動演奏されているかの有無
+     * @param judgeAuto     自動再生か(AUTO判定表示の有無)
+     */
     public void judgeNote(
-            List<NoteObject> score, // 楽譜
-            int remainTime,         // 到達残り時間
-            int pitch,              // 音程
-            int scoreKind,          // 楽譜のパート種別
-            boolean autoPlayPart,   // そのパートが自動演奏されているかの有無
-            boolean judgeAuto       // 自動再生か(AUTO判定表示の有無)
+            List<NoteObject> score, int remainTime, int pitch, int scoreKind,
+            boolean autoPlayPart, boolean judgeAuto
     ) {
         int judgeState = getJudge(remainTime, autoPlayPart);
         judgeCount[judgeState]++;

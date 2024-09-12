@@ -1,5 +1,7 @@
 package scenes.playmusic;
 
+import data.GameDataElements;
+import data.GameDataIO;
 import hash.HashGenerator;
 import save.SaveDataManager;
 import scenes.header.HeaderGetter;
@@ -20,40 +22,31 @@ import trophy.TrophyGenerator;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
 public class PlayMusicScene extends SceneBase {
     //コンストラクタ
-    public PlayMusicScene(Map<Integer, Object> data) {
+    public PlayMusicScene(GameDataIO dataIO) {
         // キーアサインの初期化とデータ渡し
-        init(keyAssign, data);
+        init(KEY_ASSIGN, dataIO);
         printMessage("演奏ゲーム初期化中", 3);
-        this.data.put(elem.SCENE, Scene.PLAY_MUSIC);
+        data.put(GameDataElements.SCENE, Scene.PLAY_MUSIC);
 
-        // 読み込むパンチカードテキスト
-        String fileName  = cast.getStrData(this.data, elem.LOAD_FILE_NAME);
+        playPart = data.get(GameDataElements.PLAY_PART, Integer.class);
 
-        // 画面サイズ
-        int displayWidth  = cast.getDisplayWidth(this.data);
-        int displayHeight = cast.getDisplayHeight(this.data);
-
-        playPart = cast.getIntData(this.data, elem.PLAY_PART);
-
-        noteMovTimeOffset = cast.getIntData(this.data, elem.NOTE_MOVE_TIME_OFFSET);
-        noteUnitMov       = cast.getFloatData(this.data, elem.NOTE_UNIT_MOVE);
-        keyAssignMainPart = cast.getIntArrData(this.data, elem.KEY_CONFIG_PLAY_RIGHT);
-        keyAssignSubPart  = cast.getIntArrData(this.data, elem.KEY_CONFIG_PLAY_LEFT);
-
-        // フレームレート
-        int frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
+        noteMovTimeOffset = data.get(GameDataElements.NOTE_MOVE_TIME_OFFSET, Integer.class);
+        noteUnitMov       = data.get(GameDataElements.NOTE_UNIT_MOVE,        Float.class);
+        keyAssignMainPart = data.get(GameDataElements.KEY_CONFIG_PLAY_RIGHT, int[].class);
+        keyAssignSubPart  = data.get(GameDataElements.KEY_CONFIG_PLAY_LEFT,  int[].class);
 
         // TODO: 読み込みに時間が掛かるので別スレッドで進行させ、その間に読み込みの進度を表示しておく。
 
         printMessage("パンチカード読み込みと時系列化", 2);
         // パンチカードの読み込み
-        String directoryPunchCard = cast.getStrData(this.data, elem.DIRECTORY_PUNCH_CARD);
-        punchCard = new TextFilesManager().loadTextFile(directoryPunchCard, fileName);
+        String filePathPunchCard = data.getFilePathStr(GameDataElements.DIR_PUNCH_CARD, GameDataElements.LOAD_FILE_ADDRESS);
+        punchCard = new TextFilesManager().loadTextFile(filePathPunchCard);
 
         // ヘッダ情報の出力とシーケンサの作成
         header = new HeaderMaker().makeHeader(punchCard);
@@ -70,7 +63,7 @@ public class PlayMusicScene extends SceneBase {
         int playTime    = (int) analyzer.getPlayTime(sequence, sequenceUnitTime);
 
         // 終了時刻 最後の音が最終時刻 + (スクロール時間) + 3000(オルゴール音源の長さ)
-        musicEndTime = playTime + cast.getIntData(this.data, elem.NOTE_MOVE_TIME_OFFSET) + 3000;
+        musicEndTime = playTime + data.get(GameDataElements.NOTE_MOVE_TIME_OFFSET, Integer.class) + 3000;
 
         // 音源コンテナのパラメータを準備
         SequenceGetter sqGetter = new SequenceGetter();
@@ -83,16 +76,19 @@ public class PlayMusicScene extends SceneBase {
                 : sqGetter.getScorePlayCountEmpty();
         // 音源データの格納
         printMessage("音源ファイル読み込みと格納", 2);
-        String directorySounds = cast.getStrData(this.data, elem.DIRECTORY_SOUNDS);
-        KeySoundLoader keySoundLoader = new KeySoundLoader(directorySounds);
+        String dirPathSounds = data.getDirectoryPathStr(GameDataElements.DIR_SOUNDS);
+        KeySoundLoader keySoundLoader = new KeySoundLoader(dirPathSounds);
         container = keySoundLoader.createContainer(mainScoreAutoPlayCount, subScoreAutoPlayCount);
         keySoundLoader.containNoSound();
 
         // 描画インスタンス
-        drawer = new PlayMusicDrawer(keyboard);
-        drawer.setAnimationTimer(frameRate);
+        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH , Integer.class);
+        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
         drawer.setDisplaySize(displayWidth, displayHeight);
         drawer.setBlueprint();
+
+        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
+        drawer.setAnimationTimer(frameRate);
 
         // 判定
         judgeUtil = new JudgeUtil(
@@ -101,16 +97,17 @@ public class PlayMusicScene extends SceneBase {
                 keyboard    // キーボード部品インスタンス
         );
         // キー音量の設定
-        float volume = cast.getFloatData(this.data, elem.MASTER_VOLUME);
+        float volume = data.get(GameDataElements.MASTER_VOLUME, Float.class);
         judgeUtil.setKeySoundMasterVolume(volume);
-        judgeAuto = (playPart == NONE); // 自動再生の有無
+        judgeAuto = (playPart == NONE);             // 自動再生の有無
         observer = new KeyPressObserver(judgeUtil); // キー押下の監視インスタンス
 
         fru.setPause(true);             // 最初は一時停止する
 
-        hash = HashGenerator.getSha256(directoryPunchCard, fileName); // ハッシュ値
+        Path filePath = data.getFilePathPath(GameDataElements.DIR_PUNCH_CARD, GameDataElements.LOAD_FILE_ADDRESS);
+        hash = HashGenerator.getSha256(filePath); // ハッシュ値
 
-        playCount = cast.getIntData(data, elem.PLAY_COUNT); // プレー回数
+        playCount = data.get(GameDataElements.PLAY_COUNT, Integer.class); // プレー回数
 
         printSequenceAnalyze(notesCount, playTime, analyze);
 
@@ -124,7 +121,7 @@ public class PlayMusicScene extends SceneBase {
         int judgeState = judgeUtil.getJudgeState();
         int combo = judgeUtil.getCombo();
         String acvStrEn = judgeUtil.getAchievementStr("Acv", "%");
-        int judgeSubDsp = cast.getIntData(data, elem.JUDGEMENT_SUB_DISPLAY);
+        int judgeSubDsp = data.get(GameDataElements.JUDGE_SUB_DISPLAY, Integer.class);
         String msgFPS = fru.msgFPS(false);
         String msgLatency = fru.msgLatency(500);
 
@@ -158,111 +155,94 @@ public class PlayMusicScene extends SceneBase {
     // 毎フレーム処理したい内容はここ(主にキー入力とタイマーの処理関連)
     @Override
     protected void actionField() {
-        // 楽譜ファイルを指定して起動すると
-        // 何故かdrawerコンストラクタの生成より先にactionFieldが走るっぽいので
-        // とりあえずdrawer == null の場合を誤魔化してる
-        if(drawer != null) {
-            if (nowTime < musicEndTime) {
-                // 現在時刻
-                nowTime = fru.getPastTime();
+        boolean isPressSpaceKey    = key.getKeyPress(KeyEvent.VK_SPACE);
+        boolean isPressUpKey       = key.getKeyPress(KeyEvent.VK_UP);
+        boolean isPressDownKey     = key.getKeyPress(KeyEvent.VK_DOWN);
+        boolean isPressEnterKey    = key.getKeyPress(KeyEvent.VK_ENTER);
+        boolean isPressMainPartKey = key.isAnyKeyPress(keyAssignMainPart);
+        boolean isPressSubPartKey  = key.isAnyKeyPress(keyAssignSubPart);
 
-                // ノーツの楽譜への書き込み
-                manager.notesManage(
-                        sequence,           // シーケンス
-                        nowTime,            // 現時刻
-                        sequenceUnitTime,   // 16分音符のミリ秒時間
-                        noteMovTimeOffset,  // ノートの移動時間
-                        mainScore,          // メロディ楽譜
-                        subScore,           // 伴奏楽譜
-                        arpDistanceTime     // アルペジオの間隔時間
+        // スペースを押して楽曲を開始する もしくは自動再生なら操作いらずで開始
+        if ( !isMusicStart && (isPressSpaceKey || drawer.isEndFadeIn() && playPart == NONE) ) {
+            isMusicStart = true;
+            fru.setPause(false); // FrameRateUtilのポーズ状態を解除
+            judgeUtil.startNoSound();
+        }
+
+        // 演奏ゲーム中の動作
+        if (nowTime < musicEndTime) {
+            // 現在時刻を更新
+            nowTime = fru.getPastTime();
+
+            // 時刻を監視して、ノーツを楽譜に書き込むか決める
+            manager.notesManage(
+                    sequence, nowTime, sequenceUnitTime, noteMovTimeOffset, mainScore, subScore, arpDistanceTime
+            );
+
+            // 演奏に割り当てたキーの押下の有無を監視し、条件を満たせば判定を行う
+            if (isMusicStart) { // 演奏開始していない間は入力を受け付けない(開始前のOOPS判定防止)
+                // メロディ側
+                observer.observeKeyPress(
+                        isPressMainPartKey, playPart, mainScore, MAIN_SCORE, nowTime, judgeAuto
                 );
-
-                // 演奏に割り当てたキーの押下の有無を監視し、条件を満たせば判定を行う
-                if (isMusicStart) { // 演奏開始していない間は入力を受け付けない(開始前のOOPS判定防止)
-                    // メロディ側
-                    observer.observeKeyPress(
-                            key.isAnyKeyPress(keyAssignMainPart),
-                                            // そのパートのキーをどれか1つでも押しているか
-                            playPart,       // 演奏しているパート
-                            mainScore,      // 楽譜
-                            MAIN_SCORE,     // 楽譜のパート種別
-                            nowTime,        // 現時刻
-                            judgeAuto       // 全パートが自動再生か(AUTO判定表示の有無)
-                    );
-                    // 伴奏側
-                    observer.observeKeyPress(
-                            key.isAnyKeyPress(keyAssignSubPart),
-                            playPart,
-                            subScore,
-                            SUB_SCORE,
-                            nowTime,
-                            judgeAuto
-                    );
-                }
-
-                // スクロール速度調整 ↑↓キー
-                if (key.getKeyPress(KeyEvent.VK_UP)) {
-                    if (noteUnitMov < 0.99F) {
-                        noteUnitMov += 0.01F;
-                        drawer.startScrollSpeedAnimTimer();
-                    }
-                } else if (key.getKeyPress(KeyEvent.VK_DOWN)) {
-                    if (noteUnitMov > 0.051F) { // 0.05Fだと何故か0.05のときに通らない 整数の方が良かったかも
-                        noteUnitMov -= 0.01F;
-                        drawer.startScrollSpeedAnimTimer();
-                    }
-                }
-                // 強制終了 Enterキー
-                else if (key.getKeyPress(KeyEvent.VK_ENTER)) {
-                    nowTime = musicEndTime;
-                    isMusicEnd = true;
-
-                    // スクロール速度だけ保持して保存
-                    data.put(elem.NOTE_UNIT_MOVE, noteUnitMov);
-                    String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
-                    String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
-                    sdManager.makeSaveData(data, directory, file);
-
-                    printMessage("強制終了します", 4);
-                }
-
+                // 伴奏側
+                observer.observeKeyPress(
+                        isPressSubPartKey, playPart, subScore, SUB_SCORE, nowTime, judgeAuto
+                );
             }
-            // リザルト画面で Enterを押して終了 もしくは自動再生ならそのまま終了
-            else if ((key.getKeyPress(KeyEvent.VK_ENTER) || playPart == NONE) && !isMusicEnd) {
+
+            // スクロール速度調整 ↑↓キー
+            if (isPressUpKey) {
+                if (noteUnitMov < 0.99F) {
+                    noteUnitMov += 0.01F;
+                    drawer.startScrollSpeedAnimTimer();
+                }
+            } else if (isPressDownKey) {
+                if (noteUnitMov > 0.051F) { // 0.05Fだと何故か0.05のときに通らない 整数の方が良かったかも
+                    noteUnitMov -= 0.01F;
+                    drawer.startScrollSpeedAnimTimer();
+                }
+            }
+            // 強制終了 Enterキー
+            else if (isPressEnterKey) {
+                nowTime = musicEndTime;
                 isMusicEnd = true;
+
+                // スクロール速度だけ保持して保存
+                data.put(GameDataElements.NOTE_UNIT_MOVE, noteUnitMov);
+                Path filePath = data.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
+                sdManager.makeSaveData(data, filePath);
+
+                printMessage("強制終了します", 4);
+            }
+
+        }
+        // リザルト画面で Enterを押して終了 もしくは自動再生ならそのまま終了
+        else if ( !isMusicEnd && (isPressEnterKey || playPart == NONE) ) {
+            isMusicEnd = true;
+
+            // 自動再生でない場合はプレー記録をインプットする
+            if(playPart != NONE) {
                 playCount++;
-
-                if(playPart != NONE) {
-                    printAchievementAndTiming();
-
-                    data.put(elem.NOTE_UNIT_MOVE, noteUnitMov); // スクロール速度の保持
-                    playDataSave();
-                }
-            }
-            // フェードアウト直後の処理（dataの持ち越しとシーン遷移）
-            else if (isMusicEnd && drawer.isEndFadeOut() ) {
-                container.closeClips(); // クリップが抱えているリソースを開放
-
-                printMessage("楽曲の選択に移動します", 3);
-                sceneTransition(Scene.ANNOUNCE); // アナウンス画面に移動(新規トロフィーが無ければ選曲画面にリダイレクト)
+                printAchievementAndTiming();
+                playDataInput();
             }
 
-            // アニメーションタイマーの経過
-            drawer.passAnimTimer(isMusicEnd);
-
-            // スペースを押して楽曲を開始する もしくは自動再生なら操作いらずで開始
-            if ( (key.getKeyPress(KeyEvent.VK_SPACE) || drawer.isEndFadeIn() && playPart == NONE) && !isMusicStart) {
-                isMusicStart = true;
-                fru.setPause(false); // FrameRateUtilのポーズ状態を解除
-                judgeUtil.startNoSound();
-            }
+            // スクロール速度や記録全般のセーブ
+            data.put(GameDataElements.NOTE_UNIT_MOVE, noteUnitMov);
+            Path filePath = data.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
+            sdManager.makeSaveData(data, filePath);
         }
-        // drawerとprvManagerが初期化されるまではここを通る
-        else {
-            if(fru.getPastFrame() % 60 == 0) {
-                printMessage("    初期化中...", 3);
-            }
+        // フェードアウト直後の処理（dataの持ち越しとシーン遷移）
+        else if (isMusicEnd && drawer.isEndFadeOut() ) {
+            container.closeClips(); // クリップが抱えているリソースを開放
+
+            printMessage("楽曲の選択に移動します", 3);
+            sceneTransition(Scene.ANNOUNCE); // アナウンス画面に移動(新規トロフィーが無ければ選曲画面にリダイレクト)
         }
+
+        // アニメーションタイマーの経過
+        drawer.passAnimTimer(isMusicEnd);
     }
 
     // なんかコンソールに出力するやつ
@@ -276,7 +256,7 @@ public class PlayMusicScene extends SceneBase {
     }
     private void printAchievementAndTiming() {
         int acvPoint = judgeUtil.getAchievementPoint() / 20;
-        int sumAcvPoint = cast.getIntData(data, elem.ACHIEVEMENT_POINT);
+        int sumAcvPoint = data.get(GameDataElements.ACHIEVEMENT_POINT, Integer.class);
         int totalAcvPoint = sumAcvPoint + acvPoint;
         printMessage("  Acv Point:\t" + acvPoint + "[pt]", 2);
         printMessage("  Total Acv:\t" + totalAcvPoint + "[pt]", 2);
@@ -286,55 +266,21 @@ public class PlayMusicScene extends SceneBase {
 
     // プレー記録の挿入
     private void insertPlayRecord() {
-        Map<String, String> playRecordAll = cast.getHashedStringData(data, elem.PLAY_RECORD);
-        String playRecordStr = playRecordAll.get(hash);
         float achievement = judgeUtil.getAchievement();
-        int playState;
-        // ALL PERFECT
-        if(achievement == 100) {
-            playState = 3;
-        }
-        // FULL COMBO
-        else if(judgeUtil.getJudgeCount()[judgeUtil.JUDGE_LOST] == 0) {
-            playState = 2;
-        }
-        // Other.
-        else {
-            playState = 1;
-        }
+        int judgeCountLost = judgeUtil.getJudgeCount()[judgeUtil.JUDGE_LOST];
+        int playState
+                = achievement == 100 ? 3    // All Perfect
+                : judgeCountLost == 0 ? 2   // Full Combo
+                : 1;                        // Played
 
         // 文字列の記録を構文解析
-        String[] playRecords = playRecordStr.split("/");
-        int[] playStateArr = new int[3];
-        float[] achievementArr = new float[3];
-        int i = 0;
-        for(String playRecord : playRecords) {
-            String[] rcd = playRecord.split(",");
-            playStateArr[i] = Integer.parseInt(rcd[0]);
-            achievementArr[i] = Float.parseFloat(rcd[1]);
-            i++;
-        }
-
-        // 記録を上回っているなら更新
-        if(playState > playStateArr[playPart - 1]) {
-            playStateArr[playPart - 1] = playState;
-        }
-        if(achievement > achievementArr[playPart - 1]) {
-            achievementArr[playPart - 1] = achievement;
-        }
-
-        // 配列のデータを文字列化して格納
-        StringBuilder recordStr = new StringBuilder();
-        for(int j = 0; j < 3; j++) {
-            recordStr.append(playStateArr[j]);
-            recordStr.append(",");
-            recordStr.append(achievementArr[j]);
-            recordStr.append("/");
-        }
-        playRecordAll.put(hash, recordStr.toString() );
+        Map<String, String> playRecords = data.getHashedPlayRecords(GameDataElements.PLAY_RECORD);
+        String playRecordStr = playRecords.getOrDefault(hash, SaveDataManager.playRecordDefault() );
+        String newPlayRecordStr = new SaveDataManager().makePlayRecord(playState, achievement, playPart, playRecordStr);
+        playRecords.put(hash, newPlayRecordStr);
 
         // 格納したものをdataに仕舞う
-        data.put(elem.PLAY_RECORD, playRecordAll);
+        data.putHashedPlayRecords(GameDataElements.PLAY_RECORD, playRecords);
     }
 
     // トロフィーの獲得
@@ -342,70 +288,68 @@ public class PlayMusicScene extends SceneBase {
         TrophyGenerator generator = new TrophyGenerator();
 
         // 新規で取得したトロフィー
-        List<Integer> trophies = generator.getTrophyByResult(
+        List<Integer> newTrophies = generator.getTrophyByResult(
                 judgeUtil.getMaxCombo(),
                 judgeUtil.getJudgeCount(),
                 judgeUtil.getAchievement(),
                 playCount,
-                cast.getIntData(data, elem.ACHIEVEMENT_POINT),
+                data.get(GameDataElements.ACHIEVEMENT_POINT, Integer.class),
                 data
         );
         // 既に取得したものと比較し、新規取得分を追加する
-        List<Integer> ownTrophies = cast.getIntListData(data, elem.TROPHY);
-        ownTrophies.addAll(trophies);
-        data.put(elem.TROPHY, ownTrophies);
-        int getTrp = trophies.size();
+        List<Integer> ownTrophies = data.getIntList(GameDataElements.TROPHY);
+        ownTrophies.addAll(newTrophies);
+        data.putIntList(GameDataElements.TROPHY, ownTrophies);
+        int getTrp = newTrophies.size();
         if(getTrp > 0) {
-            data.put(elem.NEW_GENERAL_TROPHY, trophies); // アナウンス用
+            data.putIntList(GameDataElements.NEW_GENERAL_TROPHY, newTrophies); // アナウンス用
             printMessage(getTrp + "件の新規トロフィーを獲得", 2);
         }
 
         // 楽曲別トロフィー
-        if( !generator.isNONE(generator.getTrophyOfMusic(
-                data,
-                hash,
-                judgeUtil.getJudgeCount(),
-                judgeUtil.getAchievement(),
-                playPart
-        ) ) ) {
-            List<String> ownMusicTrophies = cast.getStrListData(data, elem.MUSIC_TROPHY);
+        if( !generator.isNONE(
+                generator.getTrophyOfMusic(
+                        data,
+                        hash,
+                        judgeUtil.getJudgeCount(),
+                        judgeUtil.getAchievement(),
+                        playPart
+                )
+        ) ) {
+            List<String> ownMusicTrophies = data.getStrList(GameDataElements.MUSIC_TROPHY);
             if( !ownMusicTrophies.contains(hash) ) {
                 ownMusicTrophies.add(hash);
-                data.put(elem.MUSIC_TROPHY, ownMusicTrophies);
-                data.put(elem.NEW_MUSIC_TROPHY, hash); // アナウンス用
+                data.putStrList(GameDataElements.MUSIC_TROPHY, ownMusicTrophies);
+                data.put(GameDataElements.NEW_MUSIC_TROPHY, hash); // アナウンス用
                 printMessage("楽曲別固有トロフィーを獲得", 2);
             }
         }
     }
 
     // プレー記録の保存
-    private void playDataSave() {
+    private void playDataInput() {
         int acvPoint = judgeUtil.getAchievementPoint() / 20;
-        int sumAcvPoint = cast.getIntData(data, elem.ACHIEVEMENT_POINT);
+        int sumAcvPoint = data.get(GameDataElements.ACHIEVEMENT_POINT, Integer.class);
         int totalAcvPoint = sumAcvPoint + acvPoint;
-        data.put(elem.ACHIEVEMENT_POINT, totalAcvPoint);
-        data.put(elem.PLAY_COUNT, playCount);
+        data.put(GameDataElements.ACHIEVEMENT_POINT, totalAcvPoint);
+        data.put(GameDataElements.PLAY_COUNT, playCount);
 
         insertPlayRecord(); // プレー記録の挿入
         getTrophy(); // トロフィーの獲得
-
-        String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
-        String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
-        sdManager.makeSaveData(data, directory, file);
     }
 
     // ------------------------------------------------------ //
 
     // インスタンス諸々
-    PartsKeyboard keyboard = new PartsKeyboard();
-    private final PlayMusicDrawer drawer;
+    private final PartsKeyboard keyboard = new PartsKeyboard();
+    private final PlayMusicDrawer drawer = new PlayMusicDrawer(keyboard);
     private final KeySoundContainer container;
     private final JudgeUtil judgeUtil;
     private final KeyPressObserver observer;
     private final NotesManager manager = new NotesManager();
     private final SaveDataManager sdManager = new SaveDataManager();
 
-    protected final CalcUtil calc = new CalcUtil();
+    private final CalcUtil calc = new CalcUtil();
 
     // ヘッダ・シーケンサ・楽譜諸々
     private final List<String> punchCard;
@@ -451,7 +395,7 @@ public class PlayMusicScene extends SceneBase {
     private int playCount;
 
     // キーアサインの初期化
-    private static final List<Integer> keyAssign = Arrays.asList(
+    private static final List<Integer> KEY_ASSIGN = Arrays.asList(
             KeyEvent.VK_J, KeyEvent.VK_K, KeyEvent.VK_L,
             KeyEvent.VK_F, KeyEvent.VK_D, KeyEvent.VK_S,
             KeyEvent.VK_SPACE,

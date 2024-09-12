@@ -7,25 +7,32 @@ import scenes.draw.blueprint.Blueprint;
 
 import java.awt.*;
 
+/**
+ * 目盛とその間にポインタを描画し、数値を視覚的に示すスライダーを描画する。
+ */
 public class DrawSlider {
     private final DrawPolygon rect = new DrawRect();
     private final DrawLine line = new DrawLine();
 
-    Blueprint sliderLine;
-    Blueprint min, max;
-    Blueprint pointerInner, pointerFrame;
-
     private final Color frameColor = new Color(250, 150, 0);
 
+    /**
+     * スライダーの描画
+     * @param x         X座標
+     * @param y         Y座標
+     * @param width     スライダーの幅
+     * @param scale     目盛の数
+     * @param pointer   ポインタ(0 ≦ pointer ≦ scale)
+     */
     public void drawSlider(Graphics2D g2d, int x, int y, int width, int scale, int pointer) {
-        sliderLine = new Blueprint(x, y + 9, width, 2);
+        Blueprint sliderLine = new Blueprint(x, y + 9, width, 2);
         sliderLine.fillPolygon(g2d, rect, Color.WHITE);
 
-        min = new Blueprint(x, y, 2, 20);
+        Blueprint min = new Blueprint(x, y, 2, 20);
         min.setSide(Blueprint.CENTER, Blueprint.TOP);
         min.fillPolygon(g2d, rect, Color.WHITE);
 
-        max = new Blueprint(x + width, y, 2, 20);
+        Blueprint max = new Blueprint(x + width, y, 2, 20);
         max.setSide(Blueprint.CENTER, Blueprint.TOP);
         max.fillPolygon(g2d, rect, Color.WHITE);
 
@@ -38,11 +45,11 @@ public class DrawSlider {
         }
         int px = width * pointer / scale;
         int h = pointer == 0 || pointer == scale ? 24 : 16;
-        pointerFrame = new Blueprint(x + px, y + 10, 6, h);
+        Blueprint pointerFrame = new Blueprint(x + px, y + 10, 6, h);
         pointerFrame.setSide(Blueprint.CENTER, Blueprint.CENTER);
         pointerFrame.fillPolygon(g2d, rect, frameColor);
 
-        pointerInner = new Blueprint(x + px, y + 10, 2, h - 4);
+        Blueprint pointerInner = new Blueprint(x + px, y + 10, 2, h - 4);
         pointerInner.setSide(Blueprint.CENTER, Blueprint.CENTER);
         pointerInner.fillPolygon(g2d, rect, Color.WHITE);
     }

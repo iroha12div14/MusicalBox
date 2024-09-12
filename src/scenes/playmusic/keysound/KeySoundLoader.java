@@ -13,21 +13,29 @@ import java.util.*;
  * -----------------------------------------------------------------
  */
 
-// 音声データの読み込みと再生準備を行うクラス
-// データの格納されたcontainerを返すので再生時はそれであーだこーだ？
-
+/**
+ * 音声データの読み込みと再生準備を行うクラス
+ */
 public class KeySoundLoader {
     private final KeySoundContainer container = new KeySoundContainer();
     private String message;
-    private final String dirSounds;
+    private final String dirPath;
     private final String noSoundFile = "nosound.wav";
 
-    // コンストラクタで読み取り先ディレクトリを指定
-    public KeySoundLoader(String directory) {
-        dirSounds = directory;
+    /**
+     * インスタンス. 読み取り先ディレクトリを指定
+     * @param dirPath 読み込み先ディレクトリの絶対パス（文字型）
+     */
+    public KeySoundLoader(String dirPath) {
+        this.dirPath = dirPath;
     }
 
-    // 音源ファイルの再生準備
+    /**
+     * 音源ファイルの再生準備を行い、音源コンテナを返す
+     * @param mainScoreAutoPlayCount    メロディ楽譜における発音回数
+     * @param subScoreAutoPlayCount     伴奏楽譜における発音回数
+     * @return 音源コンテナ
+     */
     public KeySoundContainer createContainer(int[] mainScoreAutoPlayCount, int[] subScoreAutoPlayCount) {
         int pitchCount = container.getPitchCount();
         int mpcc = container.getManualPlayCounterCycle();
@@ -43,8 +51,8 @@ public class KeySoundLoader {
 
         for (int p = 0; p < pitchCount; p++) {
             // 音源ファイルのインスタンス化
-            String fileName = "org127" + container.getPitchesName(p) + ".wav";
-            String address = "./" + dirSounds + "/" + fileName;
+            String fileName = container.getFileHeader() + container.getPitchesName(p) + ".wav";
+            String address = dirPath + "/" + fileName;
             File file = new File(address);
 
             // 各音程それぞれの発音回数だけ再生用Clipを用意する
@@ -105,7 +113,7 @@ public class KeySoundLoader {
 
     // 無音ファイルを読み込んで作ったクリップを格納
     public void containNoSound() {
-        String address = "./" + dirSounds + "/" + noSoundFile;
+        String address = dirPath + "/" + noSoundFile;
         File file = new File(address);
         try {
             AudioInputStream stream = AudioSystem.getAudioInputStream(file);

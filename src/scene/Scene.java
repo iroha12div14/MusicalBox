@@ -1,6 +1,8 @@
 package scene;
 
-// シーン一覧
+/**
+ * 場面の一覧
+ */
 public enum Scene {
     SELECT_MUSIC,   // 選曲画面
     PLAY_MUSIC,     // 演奏ゲーム画面

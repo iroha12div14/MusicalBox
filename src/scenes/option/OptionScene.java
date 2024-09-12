@@ -1,5 +1,7 @@
 package scenes.option;
 
+import data.GameDataElements;
+import data.GameDataIO;
 import save.SaveDataManager;
 import scenes.draw.selector.DrawSelector;
 import scenes.draw.slider.DrawSlider;
@@ -10,6 +12,7 @@ import scenes.font.FontUtil;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +21,13 @@ import java.util.Map;
 public class OptionScene extends SceneBase {
 
     //コンストラクタ
-    public OptionScene(Map<Integer, Object> data) {
+    public OptionScene(GameDataIO dataIO) {
         // 画面サイズ、FPS、キーアサインの初期化
-        init(keyAssign, data);
+        init(KEY_ASSIGN, dataIO);
+        data.put(GameDataElements.SCENE, Scene.OPTION);
 
-        drawer = new OptionDrawer();
-        int displayWidth = cast.getIntData(this.data, elem.DISPLAY_WIDTH);
-        int displayHeight = cast.getIntData(this.data, elem.DISPLAY_HEIGHT);
+        int displayWidth = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
+        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
         drawer.setDisplaySize(displayWidth, displayHeight);
         drawer.setBlueprint();
 
@@ -35,11 +38,14 @@ public class OptionScene extends SceneBase {
         setValue();
 
         // SEの読み込み
-        String directorySE = cast.getStrData(this.data, elem.DIRECTORY_SE);
-        String[] seFileName = {SE_KNOCK, SE_SWIPE};
-        seManager = new SoundEffectManager(directorySE, seFileName);
+        seChangeState  = data.get(GameDataElements.FILE_SOUND_KNOCK_BOOK, String.class);
+        seChangeCursor = data.get(GameDataElements.FILE_SOUND_OPEN_COVER, String.class);
+        String dirPathSoundEffect = data.getDirectoryPathStr(GameDataElements.DIR_SE);
+        String[] seFileNames = {seChangeState, seChangeCursor};
+        seManager = new SoundEffectManager(dirPathSoundEffect, seFileNames);
         seManager.loadWaveFile();
-        seManager.setMasterVolume(cast.getFloatData(this.data, elem.MASTER_VOLUME) ); // 主音量を設定
+        float masterVolume = data.get(MASTER_VOLUME, Float.class);
+        seManager.setMasterVolume(masterVolume); // 主音量を設定
     }
 
     // 描画したい内容はここ
@@ -66,7 +72,7 @@ public class OptionScene extends SceneBase {
         slider.drawSlider(g2d, 120, 236, 200, 15, pmv);
 
         // 判定のサブ表示（セレクタ）
-        int pjsd = state.get(JUDGEMENT_SUB_DISPLAY);
+        int pjsd = state.get(JUDGE_SUB_DISPLAY);
         selector.drawSelector(g2d, strJudgementSubDisplay, pjsd, 80, 320, font.MSGothic(12));
     }
 
@@ -96,9 +102,8 @@ public class OptionScene extends SceneBase {
         // 変更を（適用して・適用せず）選曲画面に移動
         else if(isPressEnterKey) {
             commitChange();
-            String directory = cast.getStrData(data, elem.DIRECTORY_SAVE_DATA);
-            String file = cast.getStrData(data, elem.FILE_SAVE_DATA);
-            sdManager.makeSaveData(data, directory, file);
+            Path filePath = data.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
+            sdManager.makeSaveData(data, filePath);
             printMessage("設定した内容を適用して終了", 1);
             sceneTransition(Scene.SELECT_MUSIC);
         }
@@ -116,8 +121,8 @@ public class OptionScene extends SceneBase {
         int pmv = state.get(MASTER_VOLUME);
         data.put(MASTER_VOLUME, valueMasterVolume[pmv]);
 
-        int pjsd = state.get(JUDGEMENT_SUB_DISPLAY);
-        data.put(JUDGEMENT_SUB_DISPLAY, pjsd);
+        int pjsd = state.get(JUDGE_SUB_DISPLAY);
+        data.put(JUDGE_SUB_DISPLAY, pjsd);
     }
 
     // カーソル移動
@@ -127,31 +132,31 @@ public class OptionScene extends SceneBase {
         } else if(dir == DIR_DOWN && cursor < property.length - 1) {
             cursor++;
         }
-        seManager.startSound(SE_SWIPE);
+        seManager.startSound(seChangeCursor);
     }
     private void changeState(int dir) {
-        int key = property[cursor];         // 照会されている項目キー(elem)
-        int val = state.get(key);           // 項目内の設定番号
-        int max = values.get(key).length;   // 項目内の要素数上限
+        GameDataElements key = property[cursor];    // 照会されている項目キー(element)
+        int val = state.get(key);                   // 項目内の設定番号
+        int max = values.get(key).length;           // 項目内の要素数上限
 
         if(dir == DIR_LEFT && val > 0) {
             state.put(key, val - 1);
         } else if(dir == DIR_RIGHT && val < max - 1) {
             state.put(key, val + 1);
         }
-        seManager.startSound(SE_KNOCK);
+        seManager.startSound(seChangeState);
     }
 
     // （項目数数えるためにしか使ってない）
     private void setValue() {
         values.put(FRAME_RATE, strFrameRate);
         values.put(MASTER_VOLUME, strMasterVolume);
-        values.put(JUDGEMENT_SUB_DISPLAY, strJudgementSubDisplay);
+        values.put(JUDGE_SUB_DISPLAY, strJudgementSubDisplay);
     }
 
     // stateにいろいろputする
     private void putFrameRate() {
-        int fps = cast.getIntData(data, FRAME_RATE);
+        int fps = data.get(FRAME_RATE, Integer.class);
         int p = 0;
         for(int i = 0; i < valueFrameRate.length; i++) {
             if(fps == valueFrameRate[i]) {
@@ -161,7 +166,7 @@ public class OptionScene extends SceneBase {
         state.put(FRAME_RATE, p);
     }
     private void putMasterVolume() {
-        float masterVolume = cast.getFloatData(data, MASTER_VOLUME);
+        float masterVolume = data.get(MASTER_VOLUME, Float.class);
         int p = 0;
         for(int i = 0; i < valueMasterVolume.length; i++) {
             if(masterVolume == valueMasterVolume[i]) {
@@ -171,41 +176,41 @@ public class OptionScene extends SceneBase {
         state.put(MASTER_VOLUME, p);
     }
     private void putJudgementSubDisplay() {
-        int pjsd = cast.getIntData(data, JUDGEMENT_SUB_DISPLAY);
+        int pjsd = data.get(JUDGE_SUB_DISPLAY, Integer.class);
         int p = 0;
         for(int i = 0; i < valueJudgementSubDisplay.length; i++) {
             if(pjsd == valueJudgementSubDisplay[i]) {
                 p = i;
             }
         }
-        state.put(JUDGEMENT_SUB_DISPLAY, p);
+        state.put(JUDGE_SUB_DISPLAY, p);
     }
 
     // ------------------------------------------------------------- //
     // インスタンス
-    private final OptionDrawer drawer;
+    private final OptionDrawer drawer = new OptionDrawer();
     private final DrawSlider slider = new DrawSlider();
     private final DrawSelector selector = new DrawSelector();
     private final SoundEffectManager seManager;
     private final SaveDataManager sdManager = new SaveDataManager();
 
-    protected final FontUtil font = new FontUtil();
+    private final FontUtil font = new FontUtil();
 
     // カーソル
-    private final int DIR_UP    = -1;
-    private final int DIR_DOWN  = 1;
-    private final int DIR_LEFT  = -1;
-    private final int DIR_RIGHT = 1;
+    private static final int DIR_UP    = -1;
+    private static final int DIR_DOWN  = 1;
+    private static final int DIR_LEFT  = -1;
+    private static final int DIR_RIGHT = 1;
     private int cursor = 0;
-    private final Map<Integer, Integer> state = new HashMap<>();
+    private final Map<GameDataElements, Integer> state = new HashMap<>();
 
     // 項目数と項目名定義
-    private final Map<Integer, String[]> values = new HashMap<>();
-    private final int FRAME_RATE = elem.FRAME_RATE;
-    private final int MASTER_VOLUME = elem.MASTER_VOLUME;
-    private final int JUDGEMENT_SUB_DISPLAY = elem.JUDGEMENT_SUB_DISPLAY;
-    private final int[] property = {
-            FRAME_RATE, MASTER_VOLUME, JUDGEMENT_SUB_DISPLAY
+    private final Map<GameDataElements, String[]> values = new HashMap<>();
+    private final GameDataElements FRAME_RATE = GameDataElements.FRAME_RATE;
+    private final GameDataElements MASTER_VOLUME = GameDataElements.MASTER_VOLUME;
+    private final GameDataElements JUDGE_SUB_DISPLAY = GameDataElements.JUDGE_SUB_DISPLAY;
+    private final GameDataElements[] property = {
+            FRAME_RATE, MASTER_VOLUME, JUDGE_SUB_DISPLAY
     };
 
     // 項目内容
@@ -227,11 +232,11 @@ public class OptionScene extends SceneBase {
     };
 
     // 効果音(予約語)
-    private final String SE_KNOCK  = "knock_book01.wav";
-    private final String SE_SWIPE  = "open_cover01.wav";
+    private final String seChangeState;
+    private final String seChangeCursor;
 
     // キーアサインの初期化
-    private static final List<Integer> keyAssign = Arrays.asList(
+    private static final List<Integer> KEY_ASSIGN = Arrays.asList(
             KeyEvent.VK_UP, KeyEvent.VK_DOWN,       // 項目移動
             KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT,    // 項目変更
             KeyEvent.VK_ENTER,  // 変更を適用して終了

@@ -3,7 +3,9 @@ package scenes.draw;
 import java.awt.*;
 import java.util.Map;
 
-// 楕円
+/**
+ * 楕円の描画
+ */
 public class DrawOval extends DrawPolygon {
     @Override
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param) {

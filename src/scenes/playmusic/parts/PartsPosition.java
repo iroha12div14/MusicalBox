@@ -1,6 +1,8 @@
 package scenes.playmusic.parts;
 
-// 座標定義
+/**
+ * 各種パーツの座標定義
+ */
 public class PartsPosition {
     // パーツのコンストラクタ
     private final PartsLane lane = new PartsLane();

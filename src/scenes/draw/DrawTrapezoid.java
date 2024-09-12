@@ -4,20 +4,38 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-// 台形 上辺・下辺・高さを指定して描画
+/**
+ * 台形の描画
+ * <br/>
+ * 上辺・下辺・高さを指定して描画する。
+ */
 public class DrawTrapezoid implements Draw {
     // 上下・左右・中央寄せによる座標補正
     // Sideパラメータがここのメソッドでロストするので、Side.DIRキーの値だけ退避している(あまりスマートじゃない処理)
+    /**
+     * 形の描画（位置補正あり、辺のみ）
+     * @param c     色
+     * @param param 描画パラメータ（位置と大きさ）
+     * @param side  描画パラメータ（上下左右寄せと向き）
+     */
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param, Map<Side, Integer> side) {
         Map<Param, Integer> p = sideFixParam(param, side);
         setDIR(side.get(DIR));
         draw(g2d, c, p);
     }
+
+    /**
+     * 台形の描画（位置補正あり、中塗りあり）
+     * @param c     色
+     * @param param 描画パラメータ（位置と大きさ）
+     * @param side  描画パラメータ（上下左右寄せと向き）
+     */
     public void fill(Graphics2D g2d, Color c, Map<Param, Integer> param, Map<Side, Integer> side) {
         Map<Param, Integer> p = sideFixParam(param, side);
         setDIR(side.get(DIR));
         fill(g2d, c, p);
     }
+
     // 座標補正
     private Map<Param, Integer> sideFixParam(Map<Param, Integer> param, Map<Side, Integer> side){
         // Side_X,_Y未記入の場合は左上寄せ
@@ -52,7 +70,9 @@ public class DrawTrapezoid implements Draw {
         return p;
     }
 
-    // 台形の描画
+    /**
+     * 台形の描画（辺のみ）
+     */
     @Override
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param) {
         int[] pArrA = pointArrayA(param);
@@ -66,6 +86,9 @@ public class DrawTrapezoid implements Draw {
             g2d.drawPolygon(pArrA, pArrB, 4);
         }
     }
+    /**
+     * 台形の描画（中塗りあり）
+     */
     @Override
     public void fill(Graphics2D g2d, Color c, Map<Param, Integer> param) {
         int[] pArrA = pointArrayA(param);
@@ -79,6 +102,7 @@ public class DrawTrapezoid implements Draw {
             g2d.fillPolygon(pArrA, pArrB, 4);
         }
     }
+
     // 座標要素の構成
     private int[] pointArrayA(Map<Draw.Param, Integer> param) {
         int wt = param.get(WT);
@@ -108,24 +132,6 @@ public class DrawTrapezoid implements Draw {
         return dir;
     }
     private int dir;
-
-    // 描画用パラメータの作成の補助メソッド
-    public Map<Param, Integer> makeParam(int x, int y, int wt, int wb, int h) {
-        Map<Param, Integer> param = new HashMap<>();
-        param.put(X, x);
-        param.put(Y, y);
-        param.put(WT, wt);
-        param.put(WB, wb);
-        param.put(H, h);
-        return param;
-    }
-    public Map<Side, Integer> makeSide(int sideX, int sideY, int sideDir) {
-        Map<Side, Integer> side = new HashMap<>();
-        side.put(Side.X, sideX);
-        side.put(Side.Y, sideY);
-        side.put(Side.DIR, sideDir);
-        return side;
-    }
 
     // パラメータの簡略表記
     public final Param X = Param.X;

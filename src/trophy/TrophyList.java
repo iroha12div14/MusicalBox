@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * トロフィーの一覧
+ */
 public class TrophyList {
     public final static int NONE    = 0;
 
@@ -33,9 +36,9 @@ public class TrophyList {
     public final static int ALL_PLAY_COUNT_100PLUS  = 2002;
     public final static int ALL_PLAY_COUNT_1000PLUS = 2003;
 
-    public final static int ACV_POINT_10000PLUS     = 2011;
-    public final static int ACV_POINT_100000PLUS    = 2012;
-    public final static int ACV_POINT_1000000PLUS   = 2013;
+    public final static int ACV_POINT_10kPLUS = 2011;
+    public final static int ACV_POINT_100kPLUS = 2012;
+    public final static int ACV_POINT_1mPLUS = 2013;
 
     public final static List<Integer> member = Arrays.asList(
             MAX_COMBO_30PLUS, MAX_COMBO_100PLUS, MAX_COMBO_300PLUS, MAX_COMBO_1000PLUS,
@@ -44,7 +47,7 @@ public class TrophyList {
             FC_ACV_98PLUS, ACV_100,
             FC_ACV_LT5_OOPS_1000PLUS, FC_ACV_LT25_OOPS_0,
             ALL_PLAY_COUNT_10PLUS, ALL_PLAY_COUNT_100PLUS, ALL_PLAY_COUNT_1000PLUS,
-            ACV_POINT_10000PLUS, ACV_POINT_100000PLUS, ACV_POINT_1000000PLUS
+            ACV_POINT_10kPLUS, ACV_POINT_100kPLUS, ACV_POINT_1mPLUS
     );
 
     // ---------------------------------------------------- //
@@ -80,9 +83,9 @@ public class TrophyList {
         generalTrophyTermsStr.put(ALL_PLAY_COUNT_100PLUS, "演奏ゲームを100回終える");
         generalTrophyTermsStr.put(ALL_PLAY_COUNT_1000PLUS, "演奏ゲームを1000回終える");
 
-        generalTrophyTermsStr.put(ACV_POINT_10000PLUS, "Achievement Pointを10000以上貯める");
-        generalTrophyTermsStr.put(ACV_POINT_100000PLUS, "Achievement Pointを100000以上貯める");
-        generalTrophyTermsStr.put(ACV_POINT_1000000PLUS, "Achievement Pointを1000000以上貯める");
+        generalTrophyTermsStr.put(ACV_POINT_10kPLUS, "Achievement Pointを10000以上貯める");
+        generalTrophyTermsStr.put(ACV_POINT_100kPLUS, "Achievement Pointを100000以上貯める");
+        generalTrophyTermsStr.put(ACV_POINT_1mPLUS, "Achievement Pointを1000000以上貯める");
 
 
         generalTrophyMaskedTermsStr.put(MAX_COMBO_300PLUS, "最大コンボ[？]回以上を達成");
@@ -95,9 +98,9 @@ public class TrophyList {
         generalTrophyMaskedTermsStr.put(ALL_PLAY_COUNT_10PLUS, "[？？？？？]");
         generalTrophyMaskedTermsStr.put(ALL_PLAY_COUNT_100PLUS, "[？？？？？]");
         generalTrophyMaskedTermsStr.put(ALL_PLAY_COUNT_1000PLUS, "[？？？？？]");
-        generalTrophyMaskedTermsStr.put(ACV_POINT_10000PLUS, "[？？？？？]");
-        generalTrophyMaskedTermsStr.put(ACV_POINT_100000PLUS, "[？？？？？]");
-        generalTrophyMaskedTermsStr.put(ACV_POINT_1000000PLUS, "[？？？？？]");
+        generalTrophyMaskedTermsStr.put(ACV_POINT_10kPLUS, "[？？？？？]");
+        generalTrophyMaskedTermsStr.put(ACV_POINT_100kPLUS, "[？？？？？]");
+        generalTrophyMaskedTermsStr.put(ACV_POINT_1mPLUS, "[？？？？？]");
 
 
         generalTrophyStr.put(NONE, "");
@@ -123,9 +126,9 @@ public class TrophyList {
         generalTrophyStr.put(ALL_PLAY_COUNT_100PLUS, "ハマってる");
         generalTrophyStr.put(ALL_PLAY_COUNT_1000PLUS, "製作者冥利に尽きる");
 
-        generalTrophyStr.put(ACV_POINT_10000PLUS, "やり込んでる？");
-        generalTrophyStr.put(ACV_POINT_100000PLUS, "やり込んでる");
-        generalTrophyStr.put(ACV_POINT_1000000PLUS, "やり過ぎ");
+        generalTrophyStr.put(ACV_POINT_10kPLUS, "やり込んでる？");
+        generalTrophyStr.put(ACV_POINT_100kPLUS, "やり込んでる");
+        generalTrophyStr.put(ACV_POINT_1mPLUS, "やり過ぎ");
 
 
         // 民謡・古謡・童謡
@@ -141,6 +144,7 @@ public class TrophyList {
 
         // 自作曲
         musicTrophyStr.put("ed2de0633e0d4d07ea9abf1bdb11cc7847080f119ef2ac00e8d2eb59e166338a", "心のカタチ");
+        musicTrophyStr.put("90f3e657e3d0cf7194a787fb76c4f89349877253dd10d16ff5585dd991706657", "共鳴する記憶");
 
         // クラシック
         musicTrophyStr.put("7cd8ece334d16404e177dd9c587b1f783f5bf30236077c4b2f671d5541b1c356", "海を渡って");

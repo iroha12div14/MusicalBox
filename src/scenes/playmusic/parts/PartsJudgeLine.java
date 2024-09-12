@@ -2,6 +2,9 @@ package scenes.playmusic.parts;
 
 import java.awt.*;
 
+/**
+ * 判定線パーツの定義
+ */
 public class PartsJudgeLine {
     // レーン幅の情報が必要なのでとりあえずインスタンスを用意する
     private final PartsLane lane = new PartsLane();

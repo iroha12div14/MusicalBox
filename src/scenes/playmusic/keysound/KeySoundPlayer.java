@@ -7,15 +7,16 @@ import javax.sound.sampled.FloatControl;
 import java.util.Random;
 
 /*
- * 格納した音声データを再生するクラス
- *
- *
  * 音量調整 参考: https://nat-programming.hatenadiary.org/entry/20090923/1253697562
  *
  * 音量調整できるならピッチも変えられないかなって思ったけど
  *     clip.isControlSupported(FloatControl.Type.SAMPLE_RATE)
  * でfalseが帰って来るんで駄目みたいです。残念
  */
+
+/**
+ * 格納した音声データを再生するクラス
+  */
 public class KeySoundPlayer {
     private final KeySoundContainer container;
     private final Random rand = new Random();
@@ -26,8 +27,10 @@ public class KeySoundPlayer {
     private final float autoAudioVolume = 0.7F;             // 自動再生の音量
     private final float[] scoreKindVolume = {1.2F, 0.9F};   // scoreKind: 0, 1
 
-    // コンストラクタ
-    // WaveFilesLoaderでこのインスタンスが作られているので、それ(container)を呼ぶ
+    /**
+     * コンストラクタ
+     * @param container 音源コンテナ
+      */
     public KeySoundPlayer(KeySoundContainer container) {
         this.container = container;
     }

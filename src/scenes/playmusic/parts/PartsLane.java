@@ -1,6 +1,8 @@
 package scenes.playmusic.parts;
 
-// レーンの定義
+/**
+ * レーンパーツの定義
+ */
 public class PartsLane {
     // 寸法の定義
     private final int width = 20;

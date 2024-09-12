@@ -2,7 +2,9 @@ package scenes.playmusic.parts;
 
 import java.awt.*;
 
-// 鍵盤の処理と定義
+/**
+ * 鍵盤パーツの処理と定義
+ */
 public class PartsKeyboard {
     // レーン幅の情報が必要なのでとりあえずインスタンスを用意する
     private final PartsLane lane = new PartsLane();

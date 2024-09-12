@@ -1,6 +1,9 @@
 package scenes.selectmusic;
 
+import data.GameDataElements;
+import data.GameDataIO;
 import hash.HashGenerator;
+import save.SaveDataManager;
 import scenes.header.HeaderMaker;
 import scene.Scene;
 import scene.SceneBase;
@@ -12,6 +15,7 @@ import text.TextFilesManager;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,19 +23,17 @@ import java.util.Map;
 
 public class SelectMusicScene extends SceneBase {
     //コンストラクタ
-    public SelectMusicScene(Map<Integer, Object> data) {
+    public SelectMusicScene(GameDataIO dataIO) {
         // キーアサインの初期化とデータ渡し
-        init(keyAssign, data);
+        init(KEY_ASSIGN, dataIO);
         printMessage("楽曲選択初期化中　", 2);
+        data.put(GameDataElements.SCENE, Scene.SELECT_MUSIC);
 
-        this.data.put(elem.SCENE, Scene.SELECT_MUSIC);
-
-        playPart = cast.getIntData(this.data, elem.PLAY_PART);
-        cursor   = cast.getIntData(this.data, elem.SELECT_MUSIC_CURSOR);
-
-        frameRate = cast.getIntData(this.data, elem.FRAME_RATE);
+        playPart = data.get(GameDataElements.PLAY_PART, Integer.class);
+        cursor   = data.get(GameDataElements.SELECT_MUSIC_CURSOR, Integer.class);
 
         // アニメーションじゃないけどタイマー
+        frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
         keyReleaseTimer             = new AnimationTimer(frameRate, 300, false);
         holdUpKeyRapidInputTimer    = new AnimationTimer(frameRate, 18, false);
         holdDownKeyRapidInputTimer  = new AnimationTimer(frameRate, 18, false);
@@ -39,10 +41,10 @@ public class SelectMusicScene extends SceneBase {
 
         // パンチカードのデータを読み込み、ヘッダ部分をデータ化
         printMessage("ヘッダの読み込み中", 2);
-        String directoryPunchCard = cast.getStrData(this.data, elem.DIRECTORY_PUNCH_CARD);
+        Path dirPathPunchCard = data.getDirectoryPathPath(GameDataElements.DIR_PUNCH_CARD);
         TextFilesManager txtManager = new TextFilesManager();
-        Map<String, List<String>> textFiles = txtManager.loadTextFiles(directoryPunchCard); // <FileName, <TextFile>>
-        List<String> textFileNames = txtManager.getTextFileNames(directoryPunchCard);
+        Map<String, List<String>> textFiles = txtManager.loadTextFiles(dirPathPunchCard); // <FileName, <TextFile>>
+        List<String> textFileNames = txtManager.getTextFileNames(dirPathPunchCard);
 
         // ヘッダ（楽曲データ）を束ねる
         int musicCount = textFileNames.size();
@@ -52,7 +54,8 @@ public class SelectMusicScene extends SceneBase {
         int f = 0;
         for(String fileName : textFileNames) {
             musicFileNames[f] = fileName;
-            hashes[f] = HashGenerator.getSha256(directoryPunchCard, fileName);
+            Path filePath = data.getFilePathPath(GameDataElements.DIR_PUNCH_CARD, fileName);
+            hashes[f] = HashGenerator.getSha256(filePath);
             List<String> textFile = textFiles.get(fileName);
             Map<String, Object> header = new HeaderMaker().makeHeader(textFile);
 
@@ -62,14 +65,14 @@ public class SelectMusicScene extends SceneBase {
         }
 
         // プレー記録を抽出して格納
-        Map<String, String> playRecordAll = cast.getHashedStringData(this.data, elem.PLAY_RECORD);
+        Map<String, String> playRecords = data.getHashedPlayRecords(GameDataElements.PLAY_RECORD);
         int[][] playStates = new int[musicCount][3];
         float[][] achievements = new float[musicCount][3];
         int h = 0;
         for(String hash : hashes) {
-            String playRecordStr = playRecordAll != null
-                    ? playRecordAll.get(hash)
-                    : "0,0.00/0,0.00/0,0.00"; // こんな感じの文法の文字型データをバラして格納する
+            String playRecordStr = playRecords != null
+                    ? playRecords.getOrDefault(hash, SaveDataManager.playRecordDefault() )
+                    : SaveDataManager.playRecordDefault();
             String[] playRecordSplit = playRecordStr.split("/");
             int p = 0;
             int[] ps = new int[3];
@@ -86,29 +89,36 @@ public class SelectMusicScene extends SceneBase {
         }
 
         // 描画用インスタンスの生成と設定
-        int frameRate = cast.getDisplayFrameRate(this.data);
-        int displayWidth = cast.getDisplayWidth(this.data);
-        int displayHeight = cast.getDisplayHeight(this.data);
-        drawer = new SelectMusicDrawer();                   // 必要なデータをコンの引数じゃなくて雪駄で渡すことにした
-        drawer.setAnimationTimer(frameRate);                // アニメーションタイマー
+        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH,  Integer.class);
+        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
         drawer.setDisplaySize(displayWidth, displayHeight); // 画面サイズ
         drawer.setBlueprint();                              // 設計図
+
+        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
+        drawer.setAnimationTimer(frameRate);                // アニメーションタイマー
+
         drawer.setMusicHeaders(musicHeaders, hashes);       // ヘッダ（楽曲データ）
         drawer.setPlayRecord(playStates, achievements);     // プレー記録
 
         // SEの読み込み
-        String directorySE = cast.getStrData(this.data, elem.DIRECTORY_SE);
-        String[] seFileName = {SE_KNOCK, SE_SWIPE, SE_DECIDE};
-        seManager = new SoundEffectManager(directorySE, seFileName);
+        seChangePart  = data.get(GameDataElements.FILE_SOUND_KNOCK_BOOK, String.class);
+        seChangeMusic = data.get(GameDataElements.FILE_SOUND_OPEN_COVER, String.class);
+        seDecide      = data.get(GameDataElements.FILE_SOUND_SWIPE_PAGE, String.class);
+        String dirPathSoundEffect = data.getDirectoryPathStr(GameDataElements.DIR_SE);
+        String[] seFileNames = {seChangePart, seChangeMusic, seDecide};
+        seManager = new SoundEffectManager(dirPathSoundEffect, seFileNames);
         seManager.loadWaveFile();
-        seManager.setMasterVolume(cast.getFloatData(this.data, elem.MASTER_VOLUME) ); // 主音量を設定
 
-        // プレビューの読み込み
-        String directoryPreview = cast.getStrData(this.data, elem.DIRECTORY_PREVIEW);
-        prvManager = new SongPreviewManager(directoryPreview, musicFileNames);
+        // プレビュー音源の読み込み
+        String dirPathPreview = data.getDirectoryPathStr(GameDataElements.DIR_PREVIEW);
+        prvManager = new SongPreviewManager(dirPathPreview, musicFileNames);
         prvManager.loadWaveFile();
-        prvManager.setMasterVolume(cast.getFloatData(this.data, elem.MASTER_VOLUME) ); // 主音量を設定
         prvManager.readyStartPreview(); // 初期カーソル曲を再生
+
+        // SEとプレビュー音源の主音量設定
+        float masterVolume = data.get(GameDataElements.MASTER_VOLUME, Float.class);
+        seManager.setMasterVolume(masterVolume); // 主音量を設定
+        prvManager.setMasterVolume(masterVolume); // 主音量を設定
 
         printMessage("設定の受け渡し完了", 2);
     }
@@ -140,9 +150,9 @@ public class SelectMusicScene extends SceneBase {
     // 毎フレーム処理したい内容はここ(主にキー入力とタイマーの処理関連)
     @Override
     protected void actionField() {
-        // 何故かdrawer・prvManagerコンストラクタの生成より先にactionFieldが走ってるっぽいので
-        // とりあえずdrawer == null, prvManager == null の場合を誤魔化してる
-        if(drawer != null && prvManager != null) {
+        // 何故かprvManagerコンストラクタの生成より先にactionFieldが走ってるっぽいので
+        // とりあえずprvManager == null の場合を誤魔化してる
+        if(prvManager != null) {
             // シーン転換中はキー操作を受け付けない
             if (!sceneTransition) {
                 // キー入力構文の表記省略
@@ -247,14 +257,14 @@ public class SelectMusicScene extends SceneBase {
         titleBarMoveDirection = dir;
         drawer.startTitleBarAnimTimer();
         prvManager.stopPreview();
-        seManager.startSound(SE_SWIPE);
+        seManager.startSound(seChangeMusic);
         prvManager.readyStartPreview();
     }
 
     // パートの変更
     private void changePart() {
         playPart = calc.mod(playPart + 1, PART_KIND);
-        seManager.startSound(SE_KNOCK);
+        seManager.startSound(seChangePart);
     }
 
     // ポインタを取得
@@ -268,7 +278,7 @@ public class SelectMusicScene extends SceneBase {
     private void selectMusic() {
         setPlayMusicData();
         sceneTransition = true;
-        seManager.startSound(SE_DECIDE);
+        seManager.startSound(seDecide);
     }
 
     // オプション画面・演奏ゲーム画面へのシーン転換
@@ -297,23 +307,23 @@ public class SelectMusicScene extends SceneBase {
     // 次のシーンに引き継ぐデータを作成
     private void setPlayMusicData() {
         int pointer = getPointer(cursor);
-        data.put(elem.LOAD_FILE_NAME, musicFileNames[pointer]);
+        data.put(GameDataElements.LOAD_FILE_ADDRESS, musicFileNames[pointer]);
         setSelectMusicData();
     }
     private void setSelectMusicData() {
-        data.put(elem.SELECT_MUSIC_CURSOR, cursor);
-        data.put(elem.PLAY_PART, playPart);
+        data.put(GameDataElements.SELECT_MUSIC_CURSOR, cursor);
+        data.put(GameDataElements.PLAY_PART, playPart);
     }
 
 
     // -------------------------------------------------------------------- //
 
     // インスタンスあれこれ
-    private final SelectMusicDrawer drawer;
+    private final SelectMusicDrawer drawer = new SelectMusicDrawer();
     private final SoundEffectManager seManager;
     private final SongPreviewManager prvManager;
 
-    protected final CalcUtil calc = new CalcUtil();
+    private final CalcUtil calc = new CalcUtil();
 
     // フレームレートとキー操作用タイマー
     private final int frameRate;
@@ -339,14 +349,14 @@ public class SelectMusicScene extends SceneBase {
     private int playPart;
 
     // 効果音(予約語)
-    private static final String SE_KNOCK  = "knock_book01.wav";
-    private static final String SE_SWIPE  = "open_cover01.wav";
-    private static final String SE_DECIDE = "page_swipe02.wav";
+    private final String seChangePart;
+    private final String seChangeMusic;
+    private final String seDecide;
 
     // -------------------------------------------------------------------- //
 
     // キーアサインの初期化
-    private static final List<Integer> keyAssign = Arrays.asList(
+    private static final List<Integer> KEY_ASSIGN = Arrays.asList(
             KeyEvent.VK_UP, KeyEvent.VK_DOWN, // 曲名バー移動
             KeyEvent.VK_SPACE,  // パート変更
             KeyEvent.VK_SHIFT,  // オプション
