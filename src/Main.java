@@ -1,17 +1,20 @@
 import data.GameDataElements;
 import data.GameDataIO;
 import hash.HashGenerator;
+import logger.MessageLogger;
 import save.SaveDataManager;
 import save.SaveFileManager;
 import scene.Scene;
 import scene.SceneManager;
 import text.TextFilesManager;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 
 class Main {
 
@@ -20,53 +23,43 @@ class Main {
     //      2. ウインドウを立ち上げて最初の場面を表示
     // 以上
     public static void main(String[] args){
-        printMessage("データの初期化中　");
-
-        // ゲーム内で使用するデータの要素と翻訳インスタンス
-        SaveFileManager svManager = new SaveFileManager();
+        Main main = new Main(); // ログ出力用
+        MessageLogger.printMessage(main, "データの初期化中 ", 0);
 
         // dataの初期化
         GameDataIO dataIO = gameDataInit(args);
 
         // ここにセーブデータによる入出力を挟む
+        SaveFileManager svManager = new SaveFileManager();
         svManager.makeSaveFile(dataIO);
-        dataIO = svManager.applySaveFile(dataIO);
+        svManager.applySaveFile(dataIO);
 
         // ウインドウを立ち上げ、最初の場面を表示する
-        SceneManager sceneManager = dataIO.get(GameDataElements.SCENE_MANAGER, SceneManager.class);
+        SceneManager sceneManager = dataIO.getSceneManager();
         sceneManager.activateDisplay(dataIO);
 
         // 演奏ゲームから開始する場合はコンソールにそれ用の表示
-        if(dataIO.get(GameDataElements.SCENE, Scene.class) == Scene.PLAY_MUSIC) {
+        if(dataIO.getScene() == Scene.PLAY_MUSIC) {
             String fileAddress = dataIO.get(GameDataElements.LOAD_FILE_ADDRESS, String.class);
-            String fileName;
-            if(fileAddress.contains("\\") ) {
-                String[] fileAddressArr = fileAddress.split("\\\\");
-                fileName = fileAddressArr[fileAddressArr.length - 1];
-            } else {
-                fileName = fileAddress;
-            }
-            printMessage(fileName + " で演奏ゲームを開始します.");
+            String fileName = MessageLogger.getFileNameFromAddress(fileAddress);
+            MessageLogger.printMessage(main, fileName + " で演奏ゲームを開始します. ", 0);
         }
 
-        printMessage("データの初期化完了");
+        MessageLogger.printMessage(main, "データの初期化完了 ", 0);
     }
 
     // ゲーム内で運用するデータの初期化
     private static GameDataIO gameDataInit(String[] args) {
         GameDataIO dataIO = new GameDataIO();
         SceneManager sceneManager = new SceneManager();  // 後に立ち上げるウインドウのマネージャ
-        int len = args.length;
 
         // シーン切り替え時に稼働するインスタンスの場所を埋め込んでおく
         dataIO.put(GameDataElements.SCENE_MANAGER, sceneManager, SceneManager.class);
 
         // ウインドウの設定
-        dataIO.put(GameDataElements.WINDOW_NAME,    "オルゴールプレーヤ v0.1.0");
-        dataIO.put(GameDataElements.DISPLAY_WIDTH,  400);
-        dataIO.put(GameDataElements.DISPLAY_HEIGHT, 500);
-        dataIO.put(GameDataElements.DISPLAY_X,      500);
-        dataIO.put(GameDataElements.DISPLAY_Y,      300);
+        dataIO.put(GameDataElements.WINDOW_NAME,   "オルゴールプレーヤ v0.1.0");
+        dataIO.put(GameDataElements.WINDOW_SIZE,   new Dimension(400, 500) );
+        dataIO.put(GameDataElements.WINDOW_POINT,  new Point(500, 300) );
 
         // JARファイルのディレクトリを取得（文字型）
         Path exePath;
@@ -137,6 +130,7 @@ class Main {
         dataIO.put(GameDataElements.NEW_MUSIC_TROPHY, null, String.class);
 
         // コマンドライン引数の有無で最初に表示する場面を変える
+        int len = args.length;
         if(len == 1 || len == 2) {
             String fileAddress = args[0];
             int playPart;
@@ -155,11 +149,6 @@ class Main {
         }
 
         return dataIO;
-    }
-
-    // ログ出力用
-    private static void printMessage(String msg) {
-        System.out.println(msg + "\t@Main");
     }
 }
 

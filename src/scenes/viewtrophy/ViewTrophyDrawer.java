@@ -152,7 +152,7 @@ public class ViewTrophyDrawer extends SceneDrawer {
     // スクロールバー
     public void drawScrollBar(Graphics2D g2d, int stdY, int viewMode) {
         float progress = (float) stdY / getTrophyListHeight(viewMode);
-        int iconY = (int) (102 + (displayHeight - 136) * progress);
+        int iconY = (int) (102 + (windowSize.height - 136) * progress);
         scrollBar.fillPolygon(g2d, drawRect, Color.BLACK);
         scrollIcon.setAnchorY(iconY);
         scrollIcon.fillPolygon(g2d, drawRect, scrollIconColor);
@@ -167,22 +167,22 @@ public class ViewTrophyDrawer extends SceneDrawer {
 
     @Override
     protected void setBlueprint() {
-        background = new Blueprint(0, 0, displayWidth, displayHeight);
+        background = new Blueprint(0, 0, windowSize.width, windowSize.height);
 
-        titleFrame = new Blueprint(0, 0, displayWidth, 60);
-        titleInner = new Blueprint(3, 3, displayWidth - 6, 60 - 6);
+        titleFrame = new Blueprint(0, 0, windowSize.width, 60);
+        titleInner = new Blueprint(3, 3, windowSize.width - 6, 60 - 6);
 
-        menuFrame = new Blueprint(0, 70, displayWidth, displayHeight - 70);
-        menuInner = new Blueprint(3, 70 + 3, displayWidth - 6, displayHeight - 70 - 6);
+        menuFrame = new Blueprint(0, 70, windowSize.width, windowSize.height - 70);
+        menuInner = new Blueprint(3, 70 + 3, windowSize.width - 6, windowSize.height - 70 - 6);
 
-        trophyHide = new Blueprint(0, 0, displayWidth, 70);
-        menuFrameTop = new Blueprint(0, 70, displayWidth, 3);
-        menuFrameBottom = new Blueprint(0, displayHeight - 3, displayWidth, 3);
+        trophyHide = new Blueprint(0, 0, windowSize.width, 70);
+        menuFrameTop = new Blueprint(0, 70, windowSize.width, 3);
+        menuFrameBottom = new Blueprint(0, windowSize.height - 3, windowSize.width, 3);
 
         trophyBack = new Blueprint[TrophyList.member.size()];
         trophyBackTermsBox = new Blueprint[TrophyList.member.size()];
 
-        scrollBar = new Blueprint(380, 90, 10, displayHeight - 110);
+        scrollBar = new Blueprint(380, 90, 10, windowSize.height - 110);
         scrollIcon = new Blueprint(382, 100, 6, 20);
         scrollIcon.setSide(Blueprint.LEFT, Blueprint.CENTER);
 

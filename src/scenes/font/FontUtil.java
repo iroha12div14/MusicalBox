@@ -36,7 +36,6 @@ public class FontUtil {
     // 描画支援メソッド
     /**
      * フォントと色を設定する
-     * @param g2d   ？
      * @param font  フォント
      * @param color 色
      */
@@ -47,7 +46,6 @@ public class FontUtil {
 
     /**
      * 位置を指定して文字列を描画する
-     * @param g2d   ？
      * @param str   描画する文字列
      * @param x     X座標
      * @param y     Y座標
@@ -58,7 +56,6 @@ public class FontUtil {
 
     /**
      * 文字列の幅を算出する
-     * @param g2d   ？
      * @param font  フォント
      * @param str   文字列
      */
@@ -68,7 +65,6 @@ public class FontUtil {
 
     /**
      * 文字の高さを算出する
-     * @param g2d   ？
      * @param font  フォント
      */
     public int strHeight(Graphics2D g2d, Font font) {

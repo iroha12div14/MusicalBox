@@ -46,10 +46,8 @@ public enum GameDataElements {
 
     // ウインドウの名前やサイズ
     WINDOW_NAME,        // String
-    DISPLAY_WIDTH,      // int
-    DISPLAY_HEIGHT,     // int
-    DISPLAY_X,          // int
-    DISPLAY_Y,          // int
+    WINDOW_POINT,       // java.awt.Point
+    WINDOW_SIZE,        // java.awt.Dimension
 
     // 楽曲選択画面で用いるデータ
 

@@ -105,9 +105,8 @@ public class SaveDataManager {
      * セーブファイルを解析し、適用する
      * @param dataIO data
      * @param filePath セーブファイルの絶対パス（文字型）
-     * @return 適用後のdata
      */
-    public GameDataIO applySaveData(GameDataIO dataIO, String filePath) {
+    public void applySaveData(GameDataIO dataIO, String filePath) {
         List<String> lines = new TextFilesManager().loadTextFile(filePath);
         int mode = 0;
         List<Integer> trophies = new ArrayList<>();
@@ -190,7 +189,6 @@ public class SaveDataManager {
         if(mode == 4) { // 折角初期化したデータを空マップで埋めてしまうバグが出たので一時的対処
             dataIO.putHashedPlayRecords(GameDataElements.PLAY_RECORD, playRecord);
         }
-        return dataIO;
     }
 
     // プレー記録の初期状態

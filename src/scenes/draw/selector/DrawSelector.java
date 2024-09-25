@@ -2,7 +2,6 @@ package scenes.draw.selector;
 
 import scenes.draw.DrawPolygon;
 import scenes.draw.DrawRect;
-import scenes.draw.DrawTrapezoid;
 import scenes.draw.blueprint.Blueprint;
 import scenes.font.FontUtil;
 

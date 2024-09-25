@@ -1,6 +1,5 @@
 package scene;
 
-import data.GameDataElements;
 import data.GameDataIO;
 import scene.key.KeyController;
 import scene.fps.FrameRateUtil;
@@ -49,25 +48,20 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     protected abstract void actionField();
 
     /**
-     * 初期化
+     * 場面の初期化。このメソッドにおけるthisは継承先クラスを指す。
      * @param keyAssign その場面で使用するキーの一覧（リスト型）
      * @param dataIO    ゲーム内でやり取りされるデータの入出力を行う
      */
     protected void init(List<Integer> keyAssign, GameDataIO dataIO) {
         // クラス内で用いるデータの移動
+        dataIO.incrementSceneID();
         data = dataIO;
 
-        int nextSceneId = data.get(GameDataElements.SCENE_ID, Integer.class) + 1;
-        data.put(GameDataElements.SCENE_ID, nextSceneId);
-
         // FrameRateUtilを定義
-        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
-        fru = new FrameRateUtil(frameRate);
+        fru = new FrameRateUtil(data.getFrameRate() );
 
         // 画面サイズの指定
-        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
-        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
-        setPreferredSize(new Dimension(displayWidth, displayHeight) );
+        setPreferredSize(data.getWindowSize() );
 
         // キーリスナの登録
         key = new KeyController(keyAssign);
@@ -94,7 +88,7 @@ public abstract class SceneBase extends JPanel implements ActionListener {
         // 同フレーム内で誤って2回呼ぶとバグることが判明したのでセーフティネット敷いてる
         if( !isCalledScene ) {
             isCalledScene = true;
-            SceneManager sceneManager = data.get(GameDataElements.SCENE_MANAGER, SceneManager.class);
+            SceneManager sceneManager = data.getSceneManager();
             sceneManager.sceneTransition(scene, data, this);
         }
     }
@@ -111,18 +105,4 @@ public abstract class SceneBase extends JPanel implements ActionListener {
     private boolean isActive;
     private boolean isCalledScene = false; // シーンを誤って2回呼ばない為のセーフティネット
 
-    // ------------------------------------------------------ //
-
-    /**
-     * デバッグ用 インスタンスの稼働状態の確認
-     * @param msg コンソールに表示する文字列
-     * @param tab Tabインデントの数
-     */
-    protected void printMessage(String msg, int tab) {
-        int id = data.get(GameDataElements.SCENE_ID, Integer.class);
-        String t = "\t".repeat(tab);
-        String[] fullName = this.getClass().getName().split("\\.");
-        String name = fullName[fullName.length-1];
-        System.out.printf("%s %s@%s<ID%2d>\n", msg, t, name, id);
-    }
 }

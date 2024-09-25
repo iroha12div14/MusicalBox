@@ -1,7 +1,7 @@
 package scene;
 
-import data.GameDataElements;
 import data.GameDataIO;
+import logger.MessageLogger;
 import scenes.announce.AnnounceScene;
 import scenes.option.OptionScene;
 import scenes.playmusic.PlayMusicScene;
@@ -15,7 +15,7 @@ import java.awt.*;
  * 場面の切り替えを行う
  */
 public class SceneManager {
-    private JFrame display;
+    private JFrame window;
 
     /**
      * 場面の初期化
@@ -23,32 +23,27 @@ public class SceneManager {
      */
     public void activateDisplay(GameDataIO dataIO) {
         System.out.println("--------------------------------------");
-        printMessage("ディスプレイの初期化中", 2);
+        MessageLogger.printMessage(this, "ディスプレイの初期化中", 2);
         System.out.println("--------------------------------------");
 
         // ウインドウの表示
-        String windowName = dataIO.get(GameDataElements.WINDOW_NAME, String.class);
-        display = new JFrame(windowName);
-        display.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // [X]押したらプログラム終了的な
-        display.setBackground(Color.BLACK); // デフォルトで黒背景にする
+        window = new JFrame(dataIO.getWindowName() );
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // [X]押したらプログラム終了的な
+        window.setBackground(Color.BLACK); // デフォルトで黒背景にする
 
         // 起動時に指定されたシーンを展示
-        Scene activationScene = dataIO.get(GameDataElements.SCENE, Scene.class);
-        SceneBase base = makeScene(activationScene, dataIO);
-        display.add(base);
-        display.pack(); // ウインドウサイズをJPanelの内容に合わせて自動調整
+        SceneBase base = makeScene(dataIO.getScene(), dataIO);
+        window.add(base);
+        window.pack(); // ウインドウサイズをJPanelの内容に合わせて自動調整
 
-        display.setFocusable(true); // キーリスナのフォーカスを得る
-        display.addKeyListener(base.getKeyListeners()[0]);
+        window.setFocusable(true); // キーリスナのフォーカスを得る
+        window.addKeyListener(base.getKeyListeners()[0]);
 
-        display.setVisible(true);
+        window.setVisible(true);
 
-        int displayX = dataIO.get(GameDataElements.DISPLAY_X, Integer.class);
-        int displayY = dataIO.get(GameDataElements.DISPLAY_Y, Integer.class);
-        display.setLocation(displayX, displayY);
-
+        window.setLocation(dataIO.getWindowPoint() );
         System.out.println("--------------------------------------");
-        printMessage("ディスプレイと場面の初期化完了", 1);
+        MessageLogger.printMessage(this, "ディスプレイと場面の初期化完了", 1);
         System.out.println("--------------------------------------");
     }
 
@@ -59,24 +54,24 @@ public class SceneManager {
     public void sceneTransition(Scene nextScene, GameDataIO dataIO, SceneBase removePanel) {
         // コンポーネントの削除と再描画
         removePanel.killMyself();
-        display.remove(removePanel);
-        display.revalidate();
-        display.repaint();
+        window.remove(removePanel);
+        window.revalidate();
+        window.repaint();
         System.gc(); // リソースの破棄
 
         System.out.println("--------------------------------------");
-        printMessage("場面の転換中", 1);
+        MessageLogger.printMessage(this, "場面の転換中", 1);
         System.out.println("--------------------------------------");
 
         // コンポーネントの追加
         SceneBase addPanel = makeScene(nextScene, dataIO);
-        display.add(addPanel);
+        window.add(addPanel);
 
         // キーリスナの登録
-        display.removeKeyListener(display.getKeyListeners()[0]);
-        display.addKeyListener(addPanel.getKeyListeners()[0]);
+        window.removeKeyListener(window.getKeyListeners()[0]);
+        window.addKeyListener(addPanel.getKeyListeners()[0]);
 
-        display.setVisible(true);
+        window.setVisible(true);
     }
 
     /**
@@ -94,17 +89,5 @@ public class SceneManager {
             case VIEW_TROPHY  -> new ViewTrophyScene(dataIO);
             case ANNOUNCE     -> new AnnounceScene(dataIO);
         };
-    }
-
-    /**
-     * デバッグ用 インスタンスの稼働状態の確認
-     * @param msg 表示するメッセージ
-     * @param tab Tabインデントの数
-     */
-    protected void printMessage(String msg, int tab) {
-        String t = "\t".repeat(tab);
-        String[] fullName = this.getClass().getName().split("\\.");
-        String name = fullName[fullName.length-1];
-        System.out.printf("%s%s@%s\n", msg, t, name);
     }
 }

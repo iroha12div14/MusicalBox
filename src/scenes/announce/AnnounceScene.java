@@ -2,6 +2,7 @@ package scenes.announce;
 
 import data.GameDataElements;
 import data.GameDataIO;
+import logger.MessageLogger;
 import scene.Scene;
 import scene.SceneBase;
 import trophy.TrophyList;
@@ -22,24 +23,20 @@ public class AnnounceScene extends SceneBase {
     private final List<String> newTrophiesStr = new ArrayList<>();
 
     public AnnounceScene(GameDataIO dataIO) {
+        dataIO.put(GameDataElements.SCENE, Scene.ANNOUNCE);
         init(KEY_ASSIGN, dataIO);
-        data.put(GameDataElements.SCENE, Scene.ANNOUNCE);
 
         // 新規トロフィー
         List<Integer> newGeneralTrophy = data.getIntList(GameDataElements.NEW_GENERAL_TROPHY);
         String newMusicTrophy = data.get(GameDataElements.NEW_MUSIC_TROPHY, String.class);
 
-        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
-        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
-        drawer.setDisplaySize(displayWidth, displayHeight);
+        drawer.setAnimationTimer(data.getFrameRate() );
+        drawer.setWindowSize(data.getWindowSize() );
         drawer.setBlueprint();
-
-        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
-        drawer.setAnimationTimer(frameRate);
 
         // 新規実績解除が無いなら選曲画面にリダイレクト
         if(newGeneralTrophy.isEmpty() && newMusicTrophy == null) {
-            printMessage("新規トロフィー無し", 2);
+            MessageLogger.printMessage(this, "新規トロフィー無し", 2);
             drawer.endState();
         }
         else {
@@ -77,7 +74,7 @@ public class AnnounceScene extends SceneBase {
         }
         // 表示を閉じた後の処理
         else if(state == AnnounceDrawer.CLOSED) {
-            printMessage("楽曲選択画面に移動します", 1);
+            MessageLogger.printMessage(this, "楽曲選択画面に移動します", 1);
             sceneTransition(Scene.SELECT_MUSIC);
         }
 

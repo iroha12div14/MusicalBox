@@ -7,6 +7,9 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Arrays;
 
+/**
+ * 場面定義（見本）
+ */
 public class TemplateScene extends SceneBase {
 
     //コンストラクタ

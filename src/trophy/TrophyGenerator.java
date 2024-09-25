@@ -23,8 +23,7 @@ public class TrophyGenerator {
     }
 
     /**
-     * トロフィーの獲得の有無を全部網羅してチェックする。
-     * あとは返した側でdataに書き込んだり、外部テキストに出力したり、これをキーとしてトロフィー名を画面に表示したり
+     * 獲得できるトロフィーをすべて取得する。
      * @param maxCombo          最大コンボ
      * @param judgeCount        判定数
      * @param achievement       達成率
@@ -34,12 +33,12 @@ public class TrophyGenerator {
      * @return 獲得したトロフィーのリスト（整数値リスト）
      */
     public List<Integer> getTrophyByResult(
-            int maxCombo,           // 最大コンボ
-            int[] judgeCount,       // 判定数
-            float achievement,      // 達成率
-            int allPlayCount,       // 累計演奏ゲーム回数
-            int achievementPoint,   // Achievement Point
-            GameDataIO dataIO         // data
+            int maxCombo,
+            int[] judgeCount,
+            float achievement,
+            int allPlayCount,
+            int achievementPoint,
+            GameDataIO dataIO
     ) {
         List<Integer> ownTrophies = dataIO.getIntList(GameDataElements.TROPHY);
         List<Integer> getTrophies = new ArrayList<>();
@@ -83,18 +82,18 @@ public class TrophyGenerator {
         addTrophy(ownTrophies, getTrophies, isAcvPoint100kPlus(achievementPoint), TrophyList.ACV_POINT_100kPLUS);
         addTrophy(ownTrophies, getTrophies, isAcvPoint1mPlus(achievementPoint), TrophyList.ACV_POINT_1mPLUS);
 
-
         return getTrophies;
     }
 
     /**
-     * 曲別のトロフィーを取得した場合、ハッシュ値を返す
+     * 曲別のトロフィーを取得した場合、その楽曲のハッシュ値を返す。
+     * 返された値がNONEであるかはisNONEメソッドでチェックできる。
      * @param dataIO        ゲーム内でやり取りされるデータの入出力を行う
-     * @param hash          ハッシュ値
+     * @param hash          楽曲のハッシュ値
      * @param judgeCount    判定数
      * @param achievement   達成率
      * @param playPart      演奏パート
-     * @return ハッシュ値（文字列、取得していないなら""になる）
+     * @return ハッシュ値（文字列、取得していないならNONEを返す）
      */
     public String getTrophyOfMusic(
             GameDataIO dataIO,
@@ -105,15 +104,20 @@ public class TrophyGenerator {
     ) {
         // hashを返す条件（NONEを返さない条件）は
         // 1. フルコンかつ達成率90%以上
-        // 2. 所持トロフィーに含まれていない
-        // 3. 楽曲別実績に載っている
         boolean terms1 = isAllPartFCAndAcv90PerPlus(judgeCount, achievement, playPart);
+        // 2. 所持トロフィーに含まれていない
         boolean terms2 = !dataIO.getStrList(GameDataElements.MUSIC_TROPHY).contains(hash);
+        // 3. 楽曲別実績に載っている
         boolean terms3 = TrophyList.getMusicTrophy().containsKey(hash);
 
         return terms1 && terms2 && terms3 ? hash : NONE;
     }
 
+    /**
+     * 曲別トロフィーを獲得できたかのチェックを行う。
+     * @param str getTrophyOfMusicメソッドの返り値
+     * @return NONEの場合はtrueを返す。
+     */
     public boolean isNONE(String str) {
         return str.equals(NONE);
     }

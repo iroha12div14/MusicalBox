@@ -14,6 +14,10 @@ public class DrawSlider {
     private final DrawPolygon rect = new DrawRect();
     private final DrawLine line = new DrawLine();
 
+    Blueprint sliderLine;
+    Blueprint min, max;
+    Blueprint pointerInner, pointerFrame;
+
     private final Color frameColor = new Color(250, 150, 0);
 
     /**
@@ -25,14 +29,14 @@ public class DrawSlider {
      * @param pointer   ポインタ(0 ≦ pointer ≦ scale)
      */
     public void drawSlider(Graphics2D g2d, int x, int y, int width, int scale, int pointer) {
-        Blueprint sliderLine = new Blueprint(x, y + 9, width, 2);
+        sliderLine = new Blueprint(x, y + 9, width, 2);
         sliderLine.fillPolygon(g2d, rect, Color.WHITE);
 
-        Blueprint min = new Blueprint(x, y, 2, 20);
+        min = new Blueprint(x, y, 2, 20);
         min.setSide(Blueprint.CENTER, Blueprint.TOP);
         min.fillPolygon(g2d, rect, Color.WHITE);
 
-        Blueprint max = new Blueprint(x + width, y, 2, 20);
+        max = new Blueprint(x + width, y, 2, 20);
         max.setSide(Blueprint.CENTER, Blueprint.TOP);
         max.fillPolygon(g2d, rect, Color.WHITE);
 
@@ -45,11 +49,11 @@ public class DrawSlider {
         }
         int px = width * pointer / scale;
         int h = pointer == 0 || pointer == scale ? 24 : 16;
-        Blueprint pointerFrame = new Blueprint(x + px, y + 10, 6, h);
+        pointerFrame = new Blueprint(x + px, y + 10, 6, h);
         pointerFrame.setSide(Blueprint.CENTER, Blueprint.CENTER);
         pointerFrame.fillPolygon(g2d, rect, frameColor);
 
-        Blueprint pointerInner = new Blueprint(x + px, y + 10, 2, h - 4);
+        pointerInner = new Blueprint(x + px, y + 10, 2, h - 4);
         pointerInner.setSide(Blueprint.CENTER, Blueprint.CENTER);
         pointerInner.fillPolygon(g2d, rect, Color.WHITE);
     }

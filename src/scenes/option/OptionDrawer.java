@@ -45,13 +45,13 @@ public class OptionDrawer extends SceneDrawer {
     // 設計図の設定
     @Override
     public void setBlueprint() {
-        background = new Blueprint(0, 0, displayWidth, displayHeight);
+        background = new Blueprint(0, 0, windowSize.width, windowSize.height);
 
-        boxFrame = new Blueprint(10, 10, displayWidth - 20, 110);
-        boxInner = new Blueprint(10 + 3, 10 + 3, displayWidth - 26, 110 - 6);
+        boxFrame = new Blueprint(10, 10, windowSize.width - 20, 110);
+        boxInner = new Blueprint(10 + 3, 10 + 3, windowSize.width - 26, 110 - 6);
 
-        menuFrame = new Blueprint(10, 130, displayWidth - 20, 360);
-        menuInner = new Blueprint(10 + 3, 130 + 3, displayWidth - 26, 360 - 6);
+        menuFrame = new Blueprint(10, 130, windowSize.width - 20, 360);
+        menuInner = new Blueprint(10 + 3, 130 + 3, windowSize.width - 26, 360 - 6);
     }
 
     @Override

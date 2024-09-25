@@ -242,7 +242,7 @@ public class SelectMusicDrawer extends SceneDrawer {
     // フェードインの描画
     public void drawFadeIn(Graphics2D g2d) {
         float progress = 1.0F - fadeInAnimTimer.getProgress();
-        int w = (int) (displayWidth * progress);
+        int w = (int) (windowSize.width * progress);
         fadeIn.setWidth(w);
         fadeIn.fillPolygon(g2d, drawRect, Color.BLACK);
     }
@@ -263,17 +263,17 @@ public class SelectMusicDrawer extends SceneDrawer {
             float[] w2Mul = {1.0F / STRIPE, stripeMod};
             float[] h2Mul = {stripeMod, 1.0F / STRIPE};
 
-            fillWidth  = (int) (displayWidth  * w1Mul[stripePattern]);
-            fillHeight = (int) (displayHeight * h1Mul[stripePattern]);
+            fillWidth  = (int) (windowSize.width  * w1Mul[stripePattern]);
+            fillHeight = (int) (windowSize.height * h1Mul[stripePattern]);
 
-            barX      = (int) (displayWidth  * xMul[stripePattern]);
-            barY      = (int) (displayHeight * yMul[stripePattern]);
-            barWidth  = (int) (displayWidth  * w2Mul[stripePattern]);
-            barHeight = (int) (displayHeight * h2Mul[stripePattern]);
+            barX      = (int) (windowSize.width  * xMul[stripePattern]);
+            barY      = (int) (windowSize.height * yMul[stripePattern]);
+            barWidth  = (int) (windowSize.width  * w2Mul[stripePattern]);
+            barHeight = (int) (windowSize.height * h2Mul[stripePattern]);
         }
         else {
-            fillWidth  = displayWidth;
-            fillHeight = displayHeight;
+            fillWidth  = windowSize.width;
+            fillHeight = windowSize.height;
 
             barX       = 0;
             barY       = 0;
@@ -297,18 +297,18 @@ public class SelectMusicDrawer extends SceneDrawer {
         String musicTitleStr = HeaderGetter.getTitle(header);
         int musicTitleStrWidth = font.strWidth(g2d, sceneTransTitleFont, musicTitleStr);
         font.setStr(g2d, sceneTransTitleFont, Color.WHITE);
-        font.drawStr(g2d, musicTitleStr, displayWidth / 2 - musicTitleStrWidth / 2, 200);
+        font.drawStr(g2d, musicTitleStr, windowWidthHalf - musicTitleStrWidth / 2, 200);
 
         String playPartStr = "演奏パート：" + partStrings[playPart];
         int playPartStrWidth   = font.strWidth(g2d, playPartFont, playPartStr);
         font.setStr(g2d, playPartFont, partColor[playPart]);
-        font.drawStr(g2d, playPartStr, displayWidth / 2 - playPartStrWidth / 2, 230);
+        font.drawStr(g2d, playPartStr, windowWidthHalf - playPartStrWidth / 2, 230);
 
         if(playPart != AUTO_PLAY) {
             int level = getDifLevel(playPart, pointer);
             String difLevelStr = "難しさ：" + getDifStarAndBlank(level, playPart, 20);
             int difLevelStrWidth = font.strWidth(g2d, playPartFont, difLevelStr);
-            g2d.drawString(difLevelStr, displayWidth / 2 - difLevelStrWidth / 2, 250);
+            g2d.drawString(difLevelStr, windowWidthHalf - difLevelStrWidth / 2, 250);
         }
     }
 
@@ -370,7 +370,7 @@ public class SelectMusicDrawer extends SceneDrawer {
     // パーツの設計図の設定
     @Override
     public void setBlueprint() {
-        background = new Blueprint(0, 0, displayWidth, displayHeight);
+        background = new Blueprint(0, 0, windowSize.width, windowSize.height);
 
         int cursorBarX = 30;
         int titleBarCenterY = 250;
@@ -379,12 +379,12 @@ public class SelectMusicDrawer extends SceneDrawer {
         int playStateY = titleBarCenterY - 15;
         int playStateW = 200;
         int playStateH = 13;
-        cursorBarInner = new Blueprint(cursorBarX, titleBarCenterY, displayWidth, titleBarHeight);
+        cursorBarInner = new Blueprint(cursorBarX, titleBarCenterY, windowSize.width, titleBarHeight);
         cursorBarInner.setSide(Blueprint.LEFT, Blueprint.CENTER);
-        cursorBarFrame = new Blueprint(cursorBarX - 3, titleBarCenterY, displayWidth, titleBarHeight + 6);
+        cursorBarFrame = new Blueprint(cursorBarX - 3, titleBarCenterY, windowSize.width, titleBarHeight + 6);
         cursorBarFrame.setSide(Blueprint.LEFT, Blueprint.CENTER);
 
-        titleBar = new Blueprint(cursorBarX, titleBarCenterY, displayWidth, titleBarHeight);
+        titleBar = new Blueprint(cursorBarX, titleBarCenterY, windowSize.width, titleBarHeight);
         titleBar.setSide(Blueprint.LEFT, Blueprint.CENTER);
 
         titleBarPlayState = new Blueprint(playStateX - playStateW, playStateY, playStateW, playStateH);
@@ -418,15 +418,15 @@ public class SelectMusicDrawer extends SceneDrawer {
         pointerRotator2.setSide(Blueprint.CENTER, Blueprint.CENTER);
 
         int explainHeight = 100;
-        explainBoxFrame = new Blueprint(0, 0, displayWidth, explainHeight);
-        explainBoxInner = new Blueprint(3, 3, displayWidth - 6, explainHeight - 6);
+        explainBoxFrame = new Blueprint(0, 0, windowSize.width, explainHeight);
+        explainBoxInner = new Blueprint(3, 3, windowSize.width - 6, explainHeight - 6);
 
         int musicDescHeight = 100;
-        int musicDescY = displayHeight - musicDescHeight;
-        musicDescBoxFrame = new Blueprint(0, musicDescY, displayWidth, musicDescHeight);
-        musicDescBoxInner = new Blueprint(3, musicDescY + 3, displayWidth - 6, musicDescHeight - 6);
+        int musicDescY = windowSize.height - musicDescHeight;
+        musicDescBoxFrame = new Blueprint(0, musicDescY, windowSize.width, musicDescHeight);
+        musicDescBoxInner = new Blueprint(3, musicDescY + 3, windowSize.width - 6, musicDescHeight - 6);
 
-        int directorX = titleBarHeight + (displayWidth - titleBarHeight) / 2;
+        int directorX = titleBarHeight + (windowSize.width - titleBarHeight) / 2;
         int directorPaddingHeight = 70;
         int directorTopY = titleBarCenterY - directorPaddingHeight;
         int directorBottomY = titleBarCenterY + directorPaddingHeight;
@@ -438,10 +438,10 @@ public class SelectMusicDrawer extends SceneDrawer {
         directorBottom.setSide(Blueprint.CENTER, Blueprint.BOTTOM, Blueprint.HORIZONTAL);
 
         int fadeInWidth = 0;
-        fadeIn = new Blueprint(displayWidth, 0, fadeInWidth, displayHeight);
+        fadeIn = new Blueprint(windowSize.width, 0, fadeInWidth, windowSize.height);
         fadeIn.setSide(Blueprint.RIGHT, Blueprint.TOP);
 
-        titleBack = new Blueprint(0, 0, displayWidth, displayHeight);
+        titleBack = new Blueprint(0, 0, windowSize.width, windowSize.height);
     }
 
     // アニメーションタイマーの設定

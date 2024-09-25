@@ -3,6 +3,7 @@ package scenes.viewtrophy;
 import data.GameDataElements;
 import data.GameDataIO;
 import hash.HashGenerator;
+import logger.MessageLogger;
 import scene.Scene;
 import scene.SceneBase;
 import scenes.header.HeaderGetter;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 public class ViewTrophyScene extends SceneBase {
     // 描画用インスタンス
-    private final ViewTrophyDrawer drawer = new ViewTrophyDrawer();
+    ViewTrophyDrawer drawer = new ViewTrophyDrawer();
 
     // 試用キー一覧
     private static final List<Integer> KEY_ASSIGN = Arrays.asList(
@@ -37,25 +38,21 @@ public class ViewTrophyScene extends SceneBase {
     private int limitY; // トロフィー一覧の長さ
     private int viewMode = 0;
 
-    private final List<Integer> generalTrophies;
-    private final List<String> musicTrophies;
-    private final Map<String, String> musicTitles;
+    List<Integer> generalTrophies;
+    List<String> musicTrophies;
+    Map<String, String> musicTitles;
 
     // コン
     public ViewTrophyScene(GameDataIO dataIO) {
+        dataIO.put(GameDataElements.SCENE, Scene.VIEW_TROPHY);
         init(KEY_ASSIGN, dataIO);
-        data.put(GameDataElements.SCENE, Scene.VIEW_TROPHY);
 
-        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH,  Integer.class);
-        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
-        drawer.setDisplaySize(displayWidth, displayHeight);
+        drawer.setAnimationTimer(data.getFrameRate() );
+        drawer.setWindowSize(data.getWindowSize() );
         drawer.setBlueprint();
 
-        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
-        drawer.setAnimationTimer(frameRate);
-
         generalTrophies = data.getIntList(GameDataElements.TROPHY);
-        musicTrophies   = data.getStrList(GameDataElements.MUSIC_TROPHY);
+        musicTrophies = data.getStrList(GameDataElements.MUSIC_TROPHY);
 
         // ハッシュ値と曲名の結び付け
         musicTitles = new HashMap<>();
@@ -98,8 +95,7 @@ public class ViewTrophyScene extends SceneBase {
         drawer.drawBackground(g2d); // 背景
         if(viewMode == 0) {
             drawer.drawGeneralTrophyView(g2d, generalTrophies, stdY); // 一般トロフィーの一覧
-        }
-        else if (viewMode == 1) {
+        } else if (viewMode == 1) {
             List<String> hashes = data.getStrList(GameDataElements.MUSIC_HASH_VALUE);
             drawer.drawMusicTrophyView(g2d, musicTrophies, stdY, hashes, musicTitles); // 楽曲別トロフィーの一覧
         }
@@ -116,7 +112,7 @@ public class ViewTrophyScene extends SceneBase {
         boolean keyHoldDown   = key.getKeyHold(KeyEvent.VK_DOWN);
 
         if(keyPressEnter) { // Enterキーで楽曲選択に戻る
-            printMessage("楽曲選択に戻ります", 2);
+            MessageLogger.printMessage(this, "楽曲選択に戻ります", 2);
             sceneTransition(Scene.SELECT_MUSIC);
         }
         else if(keyPressSpace) { // Spaceキーでトロフィー表示の切り替え

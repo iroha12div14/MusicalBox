@@ -10,10 +10,10 @@ import java.util.Map;
  * 上辺・下辺・高さを指定して描画する。
  */
 public class DrawTrapezoid implements Draw {
-    // 上下・左右・中央寄せによる座標補正
+    // 上下・左右・中央寄せによる座標補正込み
     // Sideパラメータがここのメソッドでロストするので、Side.DIRキーの値だけ退避している(あまりスマートじゃない処理)
     /**
-     * 形の描画（位置補正あり、辺のみ）
+     * 台形の描画（位置補正あり、辺のみ）
      * @param c     色
      * @param param 描画パラメータ（位置と大きさ）
      * @param side  描画パラメータ（上下左右寄せと向き）
@@ -72,6 +72,8 @@ public class DrawTrapezoid implements Draw {
 
     /**
      * 台形の描画（辺のみ）
+     * @param c     色
+     * @param param 描画パラメータ（位置と大きさ）
      */
     @Override
     public void draw(Graphics2D g2d, Color c, Map<Param, Integer> param) {
@@ -88,6 +90,8 @@ public class DrawTrapezoid implements Draw {
     }
     /**
      * 台形の描画（中塗りあり）
+     * @param c     色
+     * @param param 描画パラメータ（位置と大きさ）
      */
     @Override
     public void fill(Graphics2D g2d, Color c, Map<Param, Integer> param) {

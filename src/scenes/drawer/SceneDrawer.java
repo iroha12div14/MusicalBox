@@ -6,6 +6,8 @@ import scenes.draw.DrawPolygon;
 import scenes.draw.DrawRect;
 import scenes.font.FontUtil;
 
+import java.awt.*;
+
 /**
  * 場面の描画内容を設定する。
  */
@@ -14,21 +16,21 @@ public abstract class SceneDrawer {
     protected final DrawLine drawLine = new DrawLine();
     protected final DrawPolygon drawRect = new DrawRect();
     protected final DrawPolygon drawCircle = new DrawOval();
-
     protected final FontUtil font = new FontUtil();
 
     // 画面サイズ
-    protected int displayWidth;
-    protected int displayHeight;
+    protected Dimension windowSize;
+    protected int windowWidthHalf;
+    protected int windowHeightHalf;
 
     /**
      * 画面サイズの設定
-     * @param width     幅
-     * @param height    高さ
+     * @param windowSize 画面サイズ（Dimensionオブジェクト）
      */
-    public void setDisplaySize(int width, int height) {
-        displayWidth = width;
-        displayHeight = height;
+    public void setWindowSize(Dimension windowSize) {
+        this.windowSize  = windowSize;
+        windowWidthHalf  = windowSize.width  / 2;
+        windowHeightHalf = windowSize.height / 2;
     };
 
     /**

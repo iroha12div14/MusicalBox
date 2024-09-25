@@ -1,21 +1,12 @@
 package scenes.se;
 
+import logger.MessageLogger;
+
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
-
-/*
- * // 使い方はこんな感じ
- * private final String[] seSoundFiles = {"knock_book01.wav", "page_swipe01.wav"};
- * private final String SE_KNOCK = "knock_book01.wav";
- * private final String SE_SWIPE = "page_swipe01.wav";
- *
- * private final WaveFileManager wfm = new WaveFileManager(seSoundFiles);
- *
- * wfm.startSound(SE_KNOCK);
- */
 
 /**
  * 効果音の再生に用いるクラス
@@ -56,7 +47,7 @@ public class SoundEffectManager {
             catch (FileNotFoundException e) {
                 // プレビューファイルが無い場合はここを通る
                 // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
-                System.out.println("<Error> " + address + "が見つかりません。 @SoundEffectManager");
+                MessageLogger.printMessage(this, "<Error> " + address + "が見つかりません。");
             }
             catch ( // エラーをまとめてポイ
                     UnsupportedAudioFileException |

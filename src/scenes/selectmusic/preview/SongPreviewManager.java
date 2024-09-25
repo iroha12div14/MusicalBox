@@ -1,32 +1,12 @@
 package scenes.selectmusic.preview;
 
+import logger.MessageLogger;
+
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
-
-/*
- * 使い方はこんなSoundEffectManagerと大体一緒
- * ファイル名の一覧は拡張子無し
- * 読み込むときは
- *     fileName = filenames[i] + ".wav";
- *     String address = directory + "/" + dirSE + "/" + fileName;
- *     ...
- *
- * テキストファイル名から探すときは
- *     fileName = scoreTextName.replace(".txt", "");
- *     if( Object.equals(fileNames[f], fileName) ) {
- *         ...
- *
- * プレビューを再生するときは
- *     String previewFile = musicFileNames[getPointer(cursor)];
- *     startPreview(previewFile);
- *
- * プレビューを停止するときは
- *     stopPreview();
- *     // 再生中の楽曲ファイルは中で保持しているので指定しなくてもOK
- */
 
 /**
  * 効果音の再生に用いるクラス
@@ -77,7 +57,7 @@ public class SongPreviewManager {
             catch (FileNotFoundException e) {
                 // プレビューファイルが無い場合はここを通る
                 // clip[f]はnullになるのでぬるぽが出ないよう各メソッド側で弾いておく
-                System.out.println("<Error> " + address + "が見つかりません。 @SongPreviewManager");
+                MessageLogger.printMessage(this, "<Error> " + address + "が見つかりません。");
             }
             catch ( // エラーをまとめてポイ
                     UnsupportedAudioFileException |

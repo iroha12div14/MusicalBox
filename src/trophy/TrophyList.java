@@ -36,9 +36,9 @@ public class TrophyList {
     public final static int ALL_PLAY_COUNT_100PLUS  = 2002;
     public final static int ALL_PLAY_COUNT_1000PLUS = 2003;
 
-    public final static int ACV_POINT_10kPLUS = 2011;
-    public final static int ACV_POINT_100kPLUS = 2012;
-    public final static int ACV_POINT_1mPLUS = 2013;
+    public final static int ACV_POINT_10kPLUS   = 2011;
+    public final static int ACV_POINT_100kPLUS  = 2012;
+    public final static int ACV_POINT_1mPLUS    = 2013;
 
     public final static List<Integer> member = Arrays.asList(
             MAX_COMBO_30PLUS, MAX_COMBO_100PLUS, MAX_COMBO_300PLUS, MAX_COMBO_1000PLUS,

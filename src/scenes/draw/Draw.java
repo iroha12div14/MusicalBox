@@ -9,6 +9,7 @@ import java.util.Map;
 public interface Draw {
     /**
      * 辺だけ描画
+     * @param g2d   ？
      * @param c     色
      * @param param 描画パラメータ（位置と大きさ）
      */
@@ -16,6 +17,7 @@ public interface Draw {
 
     /**
      * 中を塗って描画
+     * @param g2d   ？
      * @param c     色
      * @param param 描画パラメータ（位置と大きさ）
      */

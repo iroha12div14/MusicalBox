@@ -1,6 +1,8 @@
 package calc;
 
-// ちょっとした煩わしい計算処理するときに便利なやつ
+/**
+ * ちょっとした煩わしい計算処理するときに便利なやつ
+ */
 public class CalcUtil {
     private int digit(int fraction){
         // 再帰で出してみる
@@ -113,4 +115,5 @@ public class CalcUtil {
         }
         return valSplit[0];
     }
+
 }

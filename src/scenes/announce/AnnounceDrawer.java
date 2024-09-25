@@ -92,16 +92,16 @@ public class AnnounceDrawer extends SceneDrawer {
 
     // 解禁した実績の一覧
     public void drawTrophy(Graphics2D g2d, List<String> generalTrophy) {
-        if(state == 1) {
+        if(state == VIEWING) {
             int y = 280;
             int count = 1;
             for(String trophy : generalTrophy) {
                 String bracketedTrophy = "「" + trophy + "」";
                 int bracketedTrophyWidth = font.strWidth(g2d, bracketedTrophyFont, bracketedTrophy);
                 font.setStr(g2d, bracketedTrophyFont, bracketedTrophyShadowColor);
-                font.drawStr(g2d, bracketedTrophy, displayWidth / 2 - bracketedTrophyWidth / 2 + 2, y + 2);
+                font.drawStr(g2d, bracketedTrophy, windowWidthHalf - bracketedTrophyWidth / 2 + 2, y + 2);
                 font.setStr(g2d, bracketedTrophyFont, bracketedTrophyColor);
-                font.drawStr(g2d, bracketedTrophy, displayWidth / 2 - bracketedTrophyWidth / 2, y);
+                font.drawStr(g2d, bracketedTrophy, windowWidthHalf - bracketedTrophyWidth / 2, y);
 
                 y -= 40;
                 if(count >= 3) {
@@ -121,11 +121,11 @@ public class AnnounceDrawer extends SceneDrawer {
 
     @Override
     protected void setBlueprint() {
-        background = new Blueprint(0, 0, displayWidth, displayHeight);
+        background = new Blueprint(0, 0, windowSize.width, windowSize.height);
 
-        boxFrame = new Blueprint(displayWidth / 2, displayHeight / 2, 240, 300);
+        boxFrame = new Blueprint(windowWidthHalf, windowHeightHalf, 240, 300);
         boxFrame.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        boxInner = new Blueprint(displayWidth / 2, displayHeight / 2, 240 - 6, 300 - 6);
+        boxInner = new Blueprint(windowWidthHalf, windowHeightHalf, 240 - 6, 300 - 6);
         boxInner.setSide(Blueprint.CENTER, Blueprint.CENTER);
     }
 
@@ -137,10 +137,10 @@ public class AnnounceDrawer extends SceneDrawer {
 
     @Override
     protected void pastAnimationTimer() {
-        if(state == 0) {
+        if(state == OPENING) {
             openBox.pass();
         }
-        else if(state == 2) {
+        else if(state == CLOSING) {
             closeBox.pass();
         }
     }

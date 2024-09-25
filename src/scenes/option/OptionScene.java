@@ -2,6 +2,7 @@ package scenes.option;
 
 import data.GameDataElements;
 import data.GameDataIO;
+import logger.MessageLogger;
 import save.SaveDataManager;
 import scenes.draw.selector.DrawSelector;
 import scenes.draw.slider.DrawSlider;
@@ -23,12 +24,10 @@ public class OptionScene extends SceneBase {
     //コンストラクタ
     public OptionScene(GameDataIO dataIO) {
         // 画面サイズ、FPS、キーアサインの初期化
+        dataIO.put(GameDataElements.SCENE, Scene.OPTION);
         init(KEY_ASSIGN, dataIO);
-        data.put(GameDataElements.SCENE, Scene.OPTION);
 
-        int displayWidth = data.get(GameDataElements.DISPLAY_WIDTH, Integer.class);
-        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
-        drawer.setDisplaySize(displayWidth, displayHeight);
+        drawer.setWindowSize(data.getWindowSize() );
         drawer.setBlueprint();
 
         putFrameRate();
@@ -38,14 +37,13 @@ public class OptionScene extends SceneBase {
         setValue();
 
         // SEの読み込み
-        seChangeState  = data.get(GameDataElements.FILE_SOUND_KNOCK_BOOK, String.class);
-        seChangeCursor = data.get(GameDataElements.FILE_SOUND_OPEN_COVER, String.class);
+        seChangeState  = data.getFileName(GameDataElements.FILE_SOUND_KNOCK_BOOK);
+        seChangeCursor = data.getFileName(GameDataElements.FILE_SOUND_OPEN_COVER);
         String dirPathSoundEffect = data.getDirectoryPathStr(GameDataElements.DIR_SE);
         String[] seFileNames = {seChangeState, seChangeCursor};
         seManager = new SoundEffectManager(dirPathSoundEffect, seFileNames);
         seManager.loadWaveFile();
-        float masterVolume = data.get(MASTER_VOLUME, Float.class);
-        seManager.setMasterVolume(masterVolume); // 主音量を設定
+        seManager.setMasterVolume(data.getMasterVolume() ); // 主音量を設定
     }
 
     // 描画したい内容はここ
@@ -104,11 +102,11 @@ public class OptionScene extends SceneBase {
             commitChange();
             Path filePath = data.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
             sdManager.makeSaveData(data, filePath);
-            printMessage("設定した内容を適用して終了", 1);
+            MessageLogger.printMessage(this, "設定した内容を適用して終了", 1);
             sceneTransition(Scene.SELECT_MUSIC);
         }
         else if(isPressSpaceKey) {
-            printMessage("設定を適用せず終了", 2);
+            MessageLogger.printMessage(this, "設定を適用せず終了", 2);
             sceneTransition(Scene.SELECT_MUSIC);
         }
     }

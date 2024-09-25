@@ -262,7 +262,7 @@ public class PlayMusicDrawer extends SceneDrawer {
                     String comboStr = (combo < 10 ? "  " : combo < 100 ? " " : "") + combo + " combo";
                     int comboW = font.strWidth(g2d, comboFont, comboStr);
 
-                    int comboX = displayWidth / 2 - comboW / 2;
+                    int comboX = windowWidthHalf - comboW / 2;
                     int comboY = pos.getComboY();
 
                     font.setStr(g2d, comboFont, colorCombo);
@@ -272,7 +272,7 @@ public class PlayMusicDrawer extends SceneDrawer {
             if(judgeSubDisplay == 2 || judgeSubDisplay == 3) {
                 // 達成率
                 int acvW = font.strWidth(g2d, achivementFont, acvStr);
-                int acvX = displayWidth / 2 - acvW / 2;
+                int acvX = windowWidthHalf - acvW / 2;
                 int acvY = judgeSubDisplay == 2 ? pos.getComboY() : pos.getComboY() + 15;
                 font.setStr(g2d, achivementFont, colorAchievement);
                 font.drawStr(g2d, acvStr, acvX, acvY);
@@ -327,22 +327,23 @@ public class PlayMusicDrawer extends SceneDrawer {
         howToPlayInner.fillPolygon(g2d, drawRect, colorHowToPlayInner);
         howToPlaySeparate.fillPolygon(g2d, drawRect, colorHowToPlaySeparate);
 
-        int wCenter = displayWidth / 2;
-        int hCenter = displayHeight / 2;
-
         // 題字
         font.setStr(g2d, fontHowToPlayH1, Color.WHITE);
-        font.drawStr(g2d, "あそびかた", wCenter - 60, hCenter - 100);
+        font.drawStr(g2d, "あそびかた", windowWidthHalf - 60, windowHeightHalf - 100);
 
         // 説明セクション(メロディ側)
         if(playPart == MAIN_PART || playPart == BOTH_PART) {
             // 説明文
-            int xExpR = wCenter + 20;
+            int xExpR = windowWidthHalf + 20;
             font.setStr(g2d, fontHowToPlayP1, Color.WHITE);
-            font.drawStr(g2d, "白・青の音符が",      xExpR, hCenter - 60);
-            font.drawStr(g2d, "下の赤線に届いたら",   xExpR, hCenter - 10);
-            font.drawStr(g2d, "Ｊ Ｋ Ｌ の",         xExpR, hCenter + 40);
-            font.drawStr(g2d, "好きなキーを押そう！", xExpR, hCenter + 60);
+            font.drawStr(g2d, "白・青の音符が",
+                    xExpR, windowHeightHalf - 60);
+            font.drawStr(g2d, "下の赤線に届いたら",
+                    xExpR, windowHeightHalf - 10);
+            font.drawStr(g2d, "Ｊ Ｋ Ｌ の",
+                    xExpR, windowHeightHalf + 40);
+            font.drawStr(g2d, "好きなキーを押そう！",
+                    xExpR, windowHeightHalf + 60);
 
             // ノートと判定線の模型
             howToPlayNote1.fillPolygon(g2d, drawRect, colorNoteMainWhite);
@@ -350,21 +351,21 @@ public class PlayMusicDrawer extends SceneDrawer {
             howToPlayJudgeLine1.fillPolygon(g2d, drawRect, colorJudgeLine);
         }
         else {
-            int xExpR = wCenter + 20;
+            int xExpR = windowWidthHalf + 20;
             font.setStr(g2d, fontHowToPlayP1, colorAutoPlay);
-            font.drawStr(g2d, "メロディ側は",      xExpR, hCenter - 10);
-            font.drawStr(g2d, "自動演奏されます。", xExpR, hCenter + 10);
+            font.drawStr(g2d, "メロディ側は",      xExpR, windowHeightHalf - 10);
+            font.drawStr(g2d, "自動演奏されます。", xExpR, windowHeightHalf + 10);
         }
 
         // 説明セクション(伴奏側)
         if(playPart == SUB_PART || playPart == BOTH_PART) {
             // 説明文
-            int xExpL = wCenter - 130;
+            int xExpL = windowWidthHalf - 130;
             font.setStr(g2d, fontHowToPlayP1, Color.WHITE);
-            font.drawStr(g2d, "黄・紫の音符が",      xExpL, hCenter - 60);
-            font.drawStr(g2d, "下の赤線に届いたら",   xExpL, hCenter - 10);
-            font.drawStr(g2d, "Ｓ Ｄ Ｆ の",         xExpL, hCenter + 40);
-            font.drawStr(g2d, "好きなキーを押そう！", xExpL, hCenter + 60);
+            font.drawStr(g2d, "黄・紫の音符が",      xExpL, windowHeightHalf - 60);
+            font.drawStr(g2d, "下の赤線に届いたら",   xExpL, windowHeightHalf - 10);
+            font.drawStr(g2d, "Ｓ Ｄ Ｆ の",         xExpL, windowHeightHalf + 40);
+            font.drawStr(g2d, "好きなキーを押そう！", xExpL, windowHeightHalf + 60);
 
             // ノートと判定線の模型
             howToPlayNote3.fillPolygon(g2d, drawRect, colorNoteSubWhite);
@@ -372,14 +373,14 @@ public class PlayMusicDrawer extends SceneDrawer {
             howToPlayJudgeLine2.fillPolygon(g2d, drawRect, colorJudgeLine);
         }
         else {
-            int xExpL = wCenter - 130;
+            int xExpL = windowWidthHalf - 130;
             font.setStr(g2d, fontHowToPlayP1, colorAutoPlay);
-            font.drawStr(g2d, "伴奏側は",          xExpL, hCenter - 10);
-            font.drawStr(g2d, "自動演奏されます。", xExpL, hCenter + 10);
+            font.drawStr(g2d, "伴奏側は",          xExpL, windowHeightHalf - 10);
+            font.drawStr(g2d, "自動演奏されます。", xExpL, windowHeightHalf + 10);
         }
 
         font.setStr(g2d, fontHowToPlayP2, colorHowToPlayStartMsg);
-        font.drawStr(g2d, "SPACEキーで演奏が始まります", wCenter - 115, hCenter + 100);
+        font.drawStr(g2d, "SPACEキーで演奏が始まります", windowWidthHalf - 115, windowHeightHalf + 100);
     }
 
     // リザルト
@@ -389,27 +390,24 @@ public class PlayMusicDrawer extends SceneDrawer {
         resultInner.fillPolygon(g2d, drawRect, colorHowToPlayInner);
         resultSeparate.fillPolygon(g2d, drawRect, colorHowToPlaySeparate);
 
-        int wCenter = displayWidth / 2;
-        int hCenter = displayHeight / 2;
-
         // 題字
         font.setStr(g2d, fontHowToPlayH1, Color.WHITE);
-        font.drawStr(g2d, "演奏終了！", wCenter - 50, hCenter - 100);
+        font.drawStr(g2d, "演奏終了！", windowWidthHalf - 50, windowHeightHalf - 100);
 
         // フルコンボ表示
         if(judgeCount[JUDGE_POOR] == 0
                 && judgeCount[JUDGE_PERFECT] + judgeCount[JUDGE_GREAT] + judgeCount[JUDGE_GOOD] != 0) {
             font.setStr(g2d, fontResultFullCombo, colorResultFullComboShadow);
-            font.drawStr(g2d, "Full Combo!!", wCenter - 120 + 2, hCenter - 10 + 2);
+            font.drawStr(g2d, "Full Combo!!", windowWidthHalf - 120 + 2, windowHeightHalf - 10 + 2);
             font.setStr(g2d, fontResultFullCombo, colorResultFullCombo);
-            font.drawStr(g2d, "Full Combo!!", wCenter - 120, hCenter - 10);
+            font.drawStr(g2d, "Full Combo!!", windowWidthHalf - 120, windowHeightHalf - 10);
         }
 
         // 判定文字と回数
-        int x1 = wCenter - 90;
-        int x2 = wCenter + 80;
+        int x1 = windowWidthHalf - 90;
+        int x2 = windowWidthHalf + 80;
         for(int j = 0; j < judgeCount.length - 1; j++) {
-            int y = hCenter - 65 + 25 * j;
+            int y = windowHeightHalf - 65 + 25 * j;
             font.setStr(g2d, fontResultJudge, judge.getJudgeColor(j)[0]);
             font.drawStr(g2d, judge.getJudgeText(j), x1, y);
 
@@ -420,24 +418,24 @@ public class PlayMusicDrawer extends SceneDrawer {
 
         // 達成率表示
         font.setStr(g2d, fontResultAchievement, colorHowToPlayStartMsg);
-        font.drawStr(g2d, acvStr, wCenter - 50, hCenter + 70);
+        font.drawStr(g2d, acvStr, windowWidthHalf - 50, windowHeightHalf + 70);
 
         // コンボ数
         String comboStr = (maxCombo < 10 ? "  " : maxCombo < 100 ? " " : "") + maxCombo;
         font.setStr(g2d, fontResultCombo, colorResultCombo);
-        font.drawStr(g2d, "MaxCombo", wCenter - 113, hCenter + 60);
-        font.drawStr(g2d, comboStr, wCenter - 95, hCenter + 72);
+        font.drawStr(g2d, "MaxCombo", windowWidthHalf - 113, windowHeightHalf + 60);
+        font.drawStr(g2d, comboStr, windowWidthHalf - 95, windowHeightHalf + 72);
 
         // 下の説明文
         font.setStr(g2d, fontHowToPlayP1, Color.WHITE);
-        font.drawStr(g2d, "Enterキーを押すと、選曲画面に戻ります。", wCenter - 110, hCenter + 100);
+        font.drawStr(g2d, "Enterキーを押すと、選曲画面に戻ります。", windowWidthHalf - 110, windowHeightHalf + 100);
     }
 
     // フェードインモーション
     public void drawFadeIn(Graphics2D g2d) {
         for(int s = 0; s < 8; s++) {
             float progress = 1.0F - fadeInAnimTimer.getProgress();
-            int width = (int) (displayWidth * progress);
+            int width = (int) (windowSize.width * progress);
             fadeIn1[s].setWidth(width);
             fadeIn1[s].fillPolygon(g2d, drawRect, Color.BLACK);
             fadeIn2[s].setWidth(width);
@@ -464,12 +462,10 @@ public class PlayMusicDrawer extends SceneDrawer {
         int judgeLineWidth = judgeLine.getWidth();
         int judgeLineBold = judgeLine.getBold();
         int keyRectY = pos.keyRectY();
-        int displayWCenter = displayWidth / 2;
-        int displayHCenter = displayHeight / 2;
 
         // 背景とレーン背景
-        backgroundFrame = new Blueprint(0, 0, displayWidth, displayHeight);
-        backgroundInner = new Blueprint(3, 3, displayWidth - 6, displayHeight - 6);
+        backgroundFrame = new Blueprint(0, 0, windowSize.width, windowSize.height);
+        backgroundInner = new Blueprint(3, 3, windowSize.width - 6, windowSize.height - 6);
         laneBack = new Blueprint(laneX, judgeLineY, judgeLineWidth, laneHeight);
         laneBack.setSide(Blueprint.LEFT, Blueprint.BOTTOM);
 
@@ -504,50 +500,50 @@ public class PlayMusicDrawer extends SceneDrawer {
         musicProgress.setSide(Blueprint.LEFT, Blueprint.CENTER);
 
         // ノート隠しと上塗りの枠線
-        noteHiddenGray = new Blueprint(3, 0, displayWidth - 6, judgeLineY - laneHeight);
-        backgroundFrameTop = new Blueprint(0, 0, displayWidth, 3);
+        noteHiddenGray = new Blueprint(3, 0, windowSize.width - 6, judgeLineY - laneHeight);
+        backgroundFrameTop = new Blueprint(0, 0, windowSize.width, 3);
         laneFrame = new Blueprint(laneX, judgeLineY, laneFullWidth, laneHeight);
         laneFrame.setSide(Blueprint.LEFT, Blueprint.BOTTOM);
 
         // あそびかた説明の枠と仕切り
-        howToPlayFrame = new Blueprint(displayWCenter, displayHCenter - 10, 300, 260);
+        howToPlayFrame    = new Blueprint(windowWidthHalf, windowHeightHalf - 10, 300, 260);
         howToPlayFrame.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlayInner = new Blueprint(displayWCenter, displayHCenter - 10, 300 - 6, 260 - 6);
+        howToPlayInner    = new Blueprint(windowWidthHalf, windowHeightHalf - 10, 300 - 6, 260 - 6);
         howToPlayInner.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlaySeparate = new Blueprint(displayWCenter, displayHCenter - 5, 2, 200 - 50);
+        howToPlaySeparate = new Blueprint(windowWidthHalf, windowHeightHalf - 5, 2, 200 - 50);
         howToPlaySeparate.setSide(Blueprint.CENTER, Blueprint.CENTER);
 
         // ノートと判定線の模型
-        howToPlayNote1 = new Blueprint(displayWCenter + 60, displayHCenter - 40, 22, 8);
+        howToPlayNote1      = new Blueprint(windowWidthHalf + 60, windowHeightHalf - 40, 22, 8);
         howToPlayNote1.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlayNote2 = new Blueprint(displayWCenter + 90, displayHCenter - 40, 22, 8);
+        howToPlayNote2      = new Blueprint(windowWidthHalf + 90, windowHeightHalf - 40, 22, 8);
         howToPlayNote2.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlayJudgeLine1 = new Blueprint(displayWCenter + 80, displayHCenter + 10, 100, 8);
+        howToPlayJudgeLine1 = new Blueprint(windowWidthHalf + 80, windowHeightHalf + 10, 100, 8);
         howToPlayJudgeLine1.setSide(Blueprint.CENTER, Blueprint.CENTER);
 
         // ノートと判定線の模型
-        howToPlayNote3 = new Blueprint(displayWCenter - 90, displayHCenter - 40, 22, 8);
+        howToPlayNote3      = new Blueprint(windowWidthHalf - 90, windowHeightHalf - 40, 22, 8);
         howToPlayNote3.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlayNote4 = new Blueprint(displayWCenter - 60, displayHCenter - 40, 22, 8);
+        howToPlayNote4      = new Blueprint(windowWidthHalf - 60, windowHeightHalf - 40, 22, 8);
         howToPlayNote4.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        howToPlayJudgeLine2 = new Blueprint(displayWCenter - 70, displayHCenter + 10, 100, 8);
+        howToPlayJudgeLine2 = new Blueprint(windowWidthHalf - 70, windowHeightHalf + 10, 100, 8);
         howToPlayJudgeLine2.setSide(Blueprint.CENTER, Blueprint.CENTER);
 
         // 結果表示の枠と仕切り
-        resultFrame = new Blueprint(displayWCenter, displayHCenter - 10, 300, 260);
+        resultFrame    = new Blueprint(windowWidthHalf, windowHeightHalf - 10, 300, 260);
         resultFrame.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        resultInner = new Blueprint(displayWCenter, displayHCenter - 10, 300-6, 260-6);
+        resultInner    = new Blueprint(windowWidthHalf, windowHeightHalf - 10, 300 - 6, 260 - 6);
         resultInner.setSide(Blueprint.CENTER, Blueprint.CENTER);
-        resultSeparate = new Blueprint(displayWCenter, displayHCenter + 45, 300 - 60, 2);
+        resultSeparate = new Blueprint(windowWidthHalf, windowHeightHalf + 45, 300 - 60, 2);
         resultSeparate.setSide(Blueprint.CENTER, Blueprint.CENTER);
 
         for(int fi = 0; fi < fadeIn1.length; fi++) {
-            fadeIn1[fi] = new Blueprint(0, displayHeight * fi / 8, 0, displayHeight / 16);
-            fadeIn2[fi] = new Blueprint(displayWidth, (displayHeight * (fi * 2 + 1) / 16), 0, displayHeight / 16);
+            fadeIn1[fi] = new Blueprint(0, windowSize.height * fi / 8, 0, windowSize.height / 16);
+            fadeIn2[fi] = new Blueprint(windowSize.width, (windowSize.height * (fi * 2 + 1) / 16), 0, windowSize.height / 16);
             fadeIn2[fi].setSide(Blueprint.RIGHT, Blueprint.TOP);
         }
-        int fadeOutRadius = (displayWCenter + displayHCenter) * 2;
-        fadeOut = new Blueprint(displayWCenter, displayHCenter, fadeOutRadius, fadeOutRadius, 90, 90);
+        int fadeOutRadius = (windowWidthHalf + windowHeightHalf) * 2;
+        fadeOut = new Blueprint(windowWidthHalf, windowHeightHalf, fadeOutRadius, fadeOutRadius, 90, 90);
         fadeOut.setSide(Blueprint.CENTER, Blueprint.CENTER);
     }
 

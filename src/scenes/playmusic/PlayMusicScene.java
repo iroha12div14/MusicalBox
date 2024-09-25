@@ -3,6 +3,7 @@ package scenes.playmusic;
 import data.GameDataElements;
 import data.GameDataIO;
 import hash.HashGenerator;
+import logger.MessageLogger;
 import save.SaveDataManager;
 import scenes.header.HeaderGetter;
 import scenes.header.HeaderMaker;
@@ -30,20 +31,20 @@ public class PlayMusicScene extends SceneBase {
     //コンストラクタ
     public PlayMusicScene(GameDataIO dataIO) {
         // キーアサインの初期化とデータ渡し
+        dataIO.put(GameDataElements.SCENE, Scene.PLAY_MUSIC);
         init(KEY_ASSIGN, dataIO);
-        printMessage("演奏ゲーム初期化中", 3);
-        data.put(GameDataElements.SCENE, Scene.PLAY_MUSIC);
+        MessageLogger.printMessage(this, "演奏ゲーム初期化中", 3);
 
         playPart = data.get(GameDataElements.PLAY_PART, Integer.class);
 
         noteMovTimeOffset = data.get(GameDataElements.NOTE_MOVE_TIME_OFFSET, Integer.class);
-        noteUnitMov       = data.get(GameDataElements.NOTE_UNIT_MOVE,        Float.class);
+        noteUnitMov       = data.get(GameDataElements.NOTE_UNIT_MOVE, Float.class);
         keyAssignMainPart = data.get(GameDataElements.KEY_CONFIG_PLAY_RIGHT, int[].class);
-        keyAssignSubPart  = data.get(GameDataElements.KEY_CONFIG_PLAY_LEFT,  int[].class);
+        keyAssignSubPart  = data.get(GameDataElements.KEY_CONFIG_PLAY_LEFT, int[].class);
 
         // TODO: 読み込みに時間が掛かるので別スレッドで進行させ、その間に読み込みの進度を表示しておく。
 
-        printMessage("パンチカード読み込みと時系列化", 2);
+        MessageLogger.printMessage(this, "パンチカード読み込みと時系列化", 2);
         // パンチカードの読み込み
         String filePathPunchCard = data.getFilePathStr(GameDataElements.DIR_PUNCH_CARD, GameDataElements.LOAD_FILE_ADDRESS);
         punchCard = new TextFilesManager().loadTextFile(filePathPunchCard);
@@ -75,43 +76,35 @@ public class PlayMusicScene extends SceneBase {
                 ? sqGetter.getScorePlayCount(sequence, pc.collectionSub() )
                 : sqGetter.getScorePlayCountEmpty();
         // 音源データの格納
-        printMessage("音源ファイル読み込みと格納", 2);
+        MessageLogger.printMessage(this, "音源ファイル読み込みと格納", 2);
         String dirPathSounds = data.getDirectoryPathStr(GameDataElements.DIR_SOUNDS);
         KeySoundLoader keySoundLoader = new KeySoundLoader(dirPathSounds);
         container = keySoundLoader.createContainer(mainScoreAutoPlayCount, subScoreAutoPlayCount);
         keySoundLoader.containNoSound();
 
-        // 描画インスタンス
-        int displayWidth  = data.get(GameDataElements.DISPLAY_WIDTH , Integer.class);
-        int displayHeight = data.get(GameDataElements.DISPLAY_HEIGHT, Integer.class);
-        drawer.setDisplaySize(displayWidth, displayHeight);
+        // 描画設定
+        drawer.setAnimationTimer(data.getFrameRate() );
+        drawer.setWindowSize(data.getWindowSize() );
         drawer.setBlueprint();
 
-        int frameRate = data.get(GameDataElements.FRAME_RATE, Integer.class);
-        drawer.setAnimationTimer(frameRate);
-
-        // 判定
-        judgeUtil = new JudgeUtil(
-                container,  // 音源コンテナ
-                drawer,     // 描画インスタンス
-                keyboard    // キーボード部品インスタンス
-        );
-        // キー音量の設定
-        float volume = data.get(GameDataElements.MASTER_VOLUME, Float.class);
-        judgeUtil.setKeySoundMasterVolume(volume);
+        // 判定インスタンス
+        judgeUtil = new JudgeUtil(container, drawer, keyboard);
+        // キー音量の設定とキー押下監視インスタンス
+        judgeUtil.setKeySoundMasterVolume(data.getMasterVolume() );
         judgeAuto = (playPart == NONE);             // 自動再生の有無
         observer = new KeyPressObserver(judgeUtil); // キー押下の監視インスタンス
 
         fru.setPause(true);             // 最初は一時停止する
 
+        // ハッシュ値の取得
         Path filePath = data.getFilePathPath(GameDataElements.DIR_PUNCH_CARD, GameDataElements.LOAD_FILE_ADDRESS);
-        hash = HashGenerator.getSha256(filePath); // ハッシュ値
+        hash = HashGenerator.getSha256(filePath);
 
         playCount = data.get(GameDataElements.PLAY_COUNT, Integer.class); // プレー回数
 
         printSequenceAnalyze(notesCount, playTime, analyze);
 
-        printMessage("演奏ゲーム開始", 4);
+        MessageLogger.printMessage(this, "演奏ゲーム開始", 4);
     }
 
     // 描画したい内容はここ
@@ -213,7 +206,7 @@ public class PlayMusicScene extends SceneBase {
                 Path filePath = data.getFilePathPath(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
                 sdManager.makeSaveData(data, filePath);
 
-                printMessage("強制終了します", 4);
+                MessageLogger.printMessage(this, "強制終了します", 4);
             }
 
         }
@@ -237,7 +230,7 @@ public class PlayMusicScene extends SceneBase {
         else if (isMusicEnd && drawer.isEndFadeOut() ) {
             container.closeClips(); // クリップが抱えているリソースを開放
 
-            printMessage("楽曲の選択に移動します", 3);
+            MessageLogger.printMessage(this, "楽曲の選択に移動します", 3);
             sceneTransition(Scene.ANNOUNCE); // アナウンス画面に移動(新規トロフィーが無ければ選曲画面にリダイレクト)
         }
 
@@ -247,8 +240,8 @@ public class PlayMusicScene extends SceneBase {
 
     // なんかコンソールに出力するやつ
     private void printSequenceAnalyze(int notesCount, int playTime, float[] analyze) {
-        printMessage("[Analyze Sequence]", 3);
-        System.out.printf("  Title (Part): %s (%s)\n", musicTitle, drawer.getPlayPartStr(playPart));
+        MessageLogger.printMessage(this, "[Analyze Sequence]", 3);
+        System.out.printf("  Title (Part): %s (%s)\n", musicTitle, drawer.getPlayPartStr(playPart) );
         System.out.printf("  Notes Count:\t%d[notes]\n", notesCount);
         System.out.printf("  Play Time:\t%.3f[sec]\n", (float) playTime / 1000);
         System.out.printf("  Density:\t%.3f[notes/sec]\n", analyze[0]);
@@ -258,10 +251,11 @@ public class PlayMusicScene extends SceneBase {
         int acvPoint = judgeUtil.getAchievementPoint() / 20;
         int sumAcvPoint = data.get(GameDataElements.ACHIEVEMENT_POINT, Integer.class);
         int totalAcvPoint = sumAcvPoint + acvPoint;
-        printMessage("  Acv Point:\t" + acvPoint + "[pt]", 2);
-        printMessage("  Total Acv:\t" + totalAcvPoint + "[pt]", 2);
-        printMessage("  Timing Ave:\t" + judgeUtil.getTimingAverage() + "[ms]", 2);
-        printMessage("  Timing STDEV:\t" + calc.getFloatDotUnder(judgeUtil.getTimingSTDEV(), 2) + "[ms]", 2);
+        MessageLogger.printMessage(this, "[Achievement]", 3);
+        System.out.printf("  Point:\t%d[pt]\n", acvPoint);
+        System.out.printf("  Total Pt.:\t%d[pt]\n", totalAcvPoint);
+        System.out.printf("  Timing Ave:\t%.2f[ms]\n", judgeUtil.getTimingAverage() );
+        System.out.printf("  Timing STDEV:\t%.2f[ms]\n", calc.getFloatDotUnder(judgeUtil.getTimingSTDEV(), 2) );
     }
 
     // プレー記録の挿入
@@ -303,7 +297,7 @@ public class PlayMusicScene extends SceneBase {
         int getTrp = newTrophies.size();
         if(getTrp > 0) {
             data.putIntList(GameDataElements.NEW_GENERAL_TROPHY, newTrophies); // アナウンス用
-            printMessage(getTrp + "件の新規トロフィーを獲得", 2);
+            MessageLogger.printMessage(this, getTrp + "件の新規トロフィーを獲得", 2);
         }
 
         // 楽曲別トロフィー
@@ -321,7 +315,7 @@ public class PlayMusicScene extends SceneBase {
                 ownMusicTrophies.add(hash);
                 data.putStrList(GameDataElements.MUSIC_TROPHY, ownMusicTrophies);
                 data.put(GameDataElements.NEW_MUSIC_TROPHY, hash); // アナウンス用
-                printMessage("楽曲別固有トロフィーを獲得", 2);
+                MessageLogger.printMessage(this, "楽曲別固有トロフィーを獲得", 2);
             }
         }
     }

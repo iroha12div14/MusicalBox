@@ -1,5 +1,7 @@
 package scenes.playmusic.keysound;
 
+import logger.MessageLogger;
+
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -143,8 +145,7 @@ public class KeySoundLoader {
 
     // ロード時のメッセージの出力
     private void printMessageLoadClips(int tab) {
-        String msg = message + "\t".repeat(tab) + "@KeySoundLoader";
-        System.out.println(msg);
+        MessageLogger.printMessage(this, message, tab);
     }
     private void printBorder() {
         System.out.println("--------------------------------------");
@@ -167,6 +168,6 @@ public class KeySoundLoader {
     }
     private void messageFileNodFound(String address) {
         message = "  <Error> " + address + "が見つかりません。";
-        System.out.println(message);
+        MessageLogger.printMessage(this, message);
     }
 }

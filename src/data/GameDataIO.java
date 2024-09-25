@@ -1,5 +1,10 @@
 package data;
 
+import scene.Scene;
+import scene.SceneManager;
+
+import java.awt.Dimension;
+import java.awt.Point;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +40,7 @@ public class GameDataIO {
     /**
      * ゲーム内データを格納する（型指定省略）
      * @param element   データの要素（GameDataElements要素）
-     * @param value     データの値
+     * @param value     データの値（nullを格納する場合は型指定する方のメソッドを使うこと！）
      */
     public <T> void put(GameDataElements element, T value) {
         data.put(element, value);
@@ -84,6 +89,78 @@ public class GameDataIO {
     }
 
     // ------------------------------------------------------------------------------ //
+    // 特定の要素の出力を簡易にするメソッド
+
+    /**
+     * ウインドウ名を取得する。
+     */
+    public String getWindowName() {
+        return get(GameDataElements.WINDOW_NAME, String.class);
+    }
+
+    /**
+     * ウインドウの座標を取得する。
+     * @return ウインドウの座標（Pointオブジェクト）
+     */
+    public Point getWindowPoint() {
+        return get(GameDataElements.WINDOW_POINT, Point.class);
+    }
+
+    /**
+     * ウインドウサイズを取得する。
+     * @return ウインドウサイズ（Dimensionオブジェクト）
+     */
+    public Dimension getWindowSize() {
+        return get(GameDataElements.WINDOW_SIZE, Dimension.class);
+    }
+
+    /**
+     * フレームレートを取得する。
+     * @return フレームレート（int型）
+     */
+    public int getFrameRate() {
+        return get(GameDataElements.FRAME_RATE, Integer.class);
+    }
+
+    /**
+     * 主音量を取得する。
+     * @return 主音量（Float型）
+     */
+    public float getMasterVolume() {
+        return get(GameDataElements.MASTER_VOLUME, Float.class);
+    }
+
+    /**
+     * 場面マネージャを取得する。
+     */
+    public SceneManager getSceneManager() {
+        return get(GameDataElements.SCENE_MANAGER, SceneManager.class);
+    }
+
+    /**
+     * 現在の場面（enum）を取得する。
+     */
+    public Scene getScene() {
+        return get(GameDataElements.SCENE, Scene.class);
+    }
+
+    /**
+     * 場面IDを加算する。
+     */
+    public void incrementSceneID() {
+        int id = get(GameDataElements.SCENE_ID, Integer.class);
+        put(GameDataElements.SCENE_ID, id + 1, Integer.class);
+    }
+
+    // ------------------------------------------------------------------------------ //
+    // ファイルやディレクトリのパス出力を簡易にするメソッド
+
+    /**
+     * ファイル名を取得する。
+     */
+    public String getFileName(GameDataElements fileElement) {
+        return get(fileElement, String.class);
+    }
 
     /**
      * ディレクトリの絶対パスの取得をする。
@@ -91,8 +168,7 @@ public class GameDataIO {
      * @return ディレクトリの絶対パス（文字型）
      */
     public String getDirectoryPathStr(GameDataElements dirElement) {
-        GameDataElements r = GameDataElements.ROOT_DIRECTORY;
-        String root = get(r, String.class);
+        String root = get(GameDataElements.ROOT_DIRECTORY, String.class);
         return root + "\\" + data.get(dirElement);
     }
 

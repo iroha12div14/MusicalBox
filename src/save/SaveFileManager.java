@@ -2,6 +2,7 @@ package save;
 
 import data.GameDataElements;
 import data.GameDataIO;
+import logger.MessageLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,12 +13,11 @@ import java.nio.file.Path;
  * セーブファイルの作成・適用をする。
  */
 public class SaveFileManager {
-
     /**
      * セーブファイルを適用する
      * @param dataIO ゲーム内でやり取りされるデータの入出力を行う
      */
-    public GameDataIO applySaveFile(GameDataIO dataIO) {
+    public void applySaveFile(GameDataIO dataIO) {
         SaveDataManager manager = new SaveDataManager();
 
         String dirPathStr = dataIO.getDirectoryPathStr(GameDataElements.DIR_SAVE_DATA);
@@ -26,11 +26,8 @@ public class SaveFileManager {
         String filePathStr = dataIO.getFilePathStr(GameDataElements.DIR_SAVE_DATA, GameDataElements.FILE_SAVE_DATA);
 
         if(saveDir.exists() && Files.exists(filePathPath) ) {
-            printMessage("セーブデータをロード中",2);
-            return manager.applySaveData(dataIO, filePathStr);
-        }
-        else {
-            return dataIO;
+            MessageLogger.printMessage(this, "セーブデータをロード中", 2);
+            manager.applySaveData(dataIO, filePathStr);
         }
     }
 
@@ -53,18 +50,11 @@ public class SaveFileManager {
             if( !Files.exists(filePath) ) {
                 Files.createFile(filePath); // ファイルを作成
                 manager.makeSaveData(dataIO, filePath); // ファイルを編集
-                printMessage("セーブファイルを新規作成", 2);
+                MessageLogger.printMessage(this, "セーブファイルを新規作成", 2);
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    // ログ出力用
-    private void printMessage(String msg, int tab) {
-        String classFullName = this.getClass().getName();
-        String[] classSplitName = classFullName.split("\\.");
-        String className = classSplitName[classSplitName.length - 1];
-        System.out.println(msg + "\t".repeat(tab) + "@" + className);
     }
 }
